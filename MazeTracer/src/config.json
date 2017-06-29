@@ -1,0 +1,444 @@
+{
+  "whitelist": {
+    "imphash": [
+      {
+        "name": "wow64cpu.dll",
+        "hash": "99760ef4e9760fe74c20aa23cc71b9b6"
+      },
+      {
+        "name": "rsaenh.dll",
+        "hash": "ef9e277ff69f132edd8075d8cd0ebe4e"
+      },
+      {
+        "name": "kernel32.dll",
+        "hash": "51d53c5eba00dd0eb29d977440ba62d9"
+      },
+      {
+        "name": "cryptsp.dll",
+        "hash": "ebc7b47d85441b0f3dce38e782316e8c"
+      },
+      {
+        "name": "advapi32.dll",
+        "hash": "56357721dfdf00b68c7be9d465e71475"
+      },
+      {
+        "name": "psapi.dll",
+        "hash": "416262e0418934648b199abd24f68460"
+      },
+      {
+        "name": "ws2_32.dll",
+        "hash": "2f7ebeac5b536b34cd1b6cfa0d78cbe0"
+      },
+      {
+        "name": "ws2_32.dll",
+        "hash": "7b7ba07d02c2d411051f0feeef422944"
+      },
+      {
+        "name": "version.dll",
+        "hash": "105f233d0e5db86b1f4409873b8b8e3e"
+      },
+      {
+        "name": "msvcrt.dll",
+        "hash": "3215af17ef09211d40d007cc900160f9"
+      },
+      {
+        "name": "dnsapi.dll",
+        "hash": "531061754902cb3239c10a1bedcd8029"
+      },
+      {
+        "name": "wininet.dll",
+        "hash": "c9377bac7a936accaa8f7a6a5882beb1"
+      },
+      {
+        "name": "user32.dll",
+        "hash": "a5ee92095edb5993095c9c7315eaded3"
+      },
+      {
+        "name": "kernelbase.dll",
+        "hash": "f7d96dd35d055cc19be5d6c713a27d66"
+      },
+      {
+        "name": "sechost.dll",
+        "hash": "ea4ecf88b72b274a5f31593043f273c9"
+      },
+      {
+        "name": "rpcrt4.dll",
+        "hash": "8dc410446ad745e7b1e95a3be755c5a7"
+      },
+      {
+        "name": "cryptbase.dll",
+        "hash": "d2e9fbe1281894943d404810f65e96db"
+      },
+      {
+        "name": "gdi32.dll",
+        "hash": "d0064bcb735e35414a2b094954ef12c7"
+      },
+      {
+        "name": "ole32.dll",
+        "hash": "7016bf747e0b00620f3fac9155da41f7"
+      },
+      {
+        "name": "shell32.dll",
+        "hash": "a0f2b46fb2da31429ef37339284f18ce"
+      },
+      {
+        "name": "oleaut32.dll",
+        "hash": "977da93a00c8c967c5054bcabd8a4ebc"
+      },
+      {
+        "name": "kernel32.dll",
+        "hash": "9165b02c931d76a9b666d8d42128111b"
+      },
+      {
+        "name": "kernelbase.dll",
+        "hash": "3f7fb1504bb73a54888bf1c3650fe4cf"
+      },
+      {
+        "name": "msvcrt.dll",
+        "hash": "e1ee2d71958d21e0e1bf887dfe76af7f"
+      },
+      {
+        "name": "gdi32.dll",
+        "hash": "51945fdf9aaf56aeb9d6fa1f21b638ce"
+      },
+      {
+        "name": "user32.dll",
+        "hash": "2cb501375ed127591bf5cfee7f1e52fe"
+      },
+      {
+        "name": "oleaut32.dll",
+        "hash": "30726b6195cf2c5d6738ab441dab2ae2"
+      },
+      {
+        "name": "ole32.dll",
+        "hash": "660b16d35c9f18da41624d3fc3175d3c"
+      }
+    ],
+    "exphash": [
+      {
+        "name": "ntdll.dll",
+        "hash": "302ce8c1fc2c0c08531dd6637cd5e81f"
+      },
+      {
+        "name": "ntdll.dll",
+        "hash": "4a40a87fd83beb5f83fdd4e5be70262e"
+      }
+    ],
+    "path": [
+      "C:\\Windows\\"
+    ],
+    "mods": [
+      "mazewalker",
+      "pinvm",
+      "wow64cpu"
+    ]
+  },
+  "pin32_dir": "PROVIDE_FULL_PATH",
+  "pin64_dir": "PROVIDE_FULL_PATH",
+  "api_monitor": {
+    "script_path": "PROVIDE_FULL_PATH_TO_PySCRIPTS",
+    "apis": [
+      {
+        "name": "SetupDiGetDeviceRegistryPropertyA",
+        "lib": "setupapi",
+        "num": 7,
+        "pre_parser": "",
+        "post_parser": "post_antivm1"
+      },
+      {
+        "name": "wsprintfA",
+        "lib": "user32",
+        "num": 2,
+        "pre_parser": "",
+        "post_parser": "post_wsprintfa"
+      },
+      {
+        "name": "sprintf",
+        "lib": "MSVCRT",
+        "num": 2,
+        "pre_parser": "",
+        "post_parser": "post_wsprintfa"
+      },
+      {
+        "name": "CreateFileW",
+        "lib": "kernel32",
+        "num": 7,
+        "pre_parser": "pre_createfilew",
+        "post_parser": ""
+      },
+      {
+        "name": "CreateFileA",
+        "lib": "kernel32",
+        "num": 7,
+        "pre_parser": "pre_createfilea",
+        "post_parser": ""
+      },
+      {
+        "name": "CreateDirectoryW",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_createdirectoryw",
+        "post_parser": ""
+      },
+      {
+        "name": "CreateDirectoryA",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_createdirectorya",
+        "post_parser": ""
+      },
+      {
+        "name": "ShellExecuteW",
+        "lib": "shell32",
+        "num": 6,
+        "pre_parser": "pre_shellexecutew",
+        "post_parser": ""
+      },
+      {
+        "name": "NtWriteVirtualMemory",
+        "lib": "ntdll",
+        "num": 5,
+        "pre_parser": "pre_ntwritevirtualmemory",
+        "post_parser": ""
+      },
+      {
+        "name": "NtSetContextThread",
+        "lib": "ntdll",
+        "num": 2,
+        "pre_parser": "pre_ntsetthreadcontext",
+        "post_parser": ""
+      },
+      {
+        "name": "OpenProcess",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_openprocess",
+        "post_parser": ""
+      },
+      {
+        "name": "CreateThread",
+        "lib": "kernel32",
+        "num": 6,
+        "pre_parser": "pre_createthread",
+        "post_parser": ""
+      },
+      {
+        "name": "RegCreateKeyA",
+        "lib": "advapi32",
+        "num": 3,
+        "pre_parser": "pre_regcreatekeya",
+        "post_parser": ""
+      },
+      {
+        "name": "RegCreateKeyW",
+        "lib": "advapi32",
+        "num": 3,
+        "pre_parser": "pre_regcreatekeyw",
+        "post_parser": ""
+      },
+      {
+        "name": "RegOpenKeyA",
+        "lib": "advapi32",
+        "num": 3,
+        "pre_parser": "pre_regopenkeya",
+        "post_parser": ""
+      },
+      {
+        "name": "RegOpenKeyExA",
+        "lib": "advapi32",
+        "num": 5,
+        "pre_parser": "",
+        "post_parser": "post_regopenkeyexa"
+      },
+      {
+        "name": "RegOpenKeyW",
+        "lib": "advapi32",
+        "num": 3,
+        "pre_parser": "pre_regopenkeyw",
+        "post_parser": ""
+      },
+      {
+        "name": "RegOpenKeyExW",
+        "lib": "advapi32",
+        "num": 5,
+        "pre_parser": "",
+        "post_parser": "post_regopenkeyexw"
+      },
+      {
+        "name": "RegQueryValueExA",
+        "lib": "advapi32",
+        "num": 6,
+        "pre_parser": "pre_regqueryvalueexa",
+        "post_parser": ""
+      },
+      {
+        "name": "RegQueryValueExW",
+        "lib": "advapi32",
+        "num": 6,
+        "pre_parser": "pre_regqueryvalueexw",
+        "post_parser": ""
+      },
+      {
+        "name": "RegSetValueExA",
+        "lib": "advapi32",
+        "num": 6,
+        "pre_parser": "pre_regsetvaluea",
+        "post_parser": ""
+      },
+      {
+      	"name": "CopyFileA",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_copyfilea",
+        "post_parser": ""
+      },
+      {
+      	"name": "CopyFileW",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_copyfilew",
+        "post_parser": ""
+      },
+      {
+      	"name": "MoveFileA",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_movefilea",
+        "post_parser": ""
+      },
+      {
+      	"name": "MoveFileW",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_movefilew",
+        "post_parser": ""
+      },
+      {
+      	"name": "CreateMutexA",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_createmutexa",
+        "post_parser": ""
+      },
+      {
+      	"name": "CreateMutexW",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_createmutexw",
+        "post_parser": ""
+      },
+      {
+      	"name": "DeleteFileA",
+        "lib": "kernel32",
+        "num": 1,
+        "pre_parser": "pre_deletefilea",
+        "post_parser": ""
+      },
+      {
+      	"name": "DeleteFileW",
+        "lib": "kernel32",
+        "num": 1,
+        "pre_parser": "pre_deletefilew",
+        "post_parser": ""
+      },
+      {
+      	"name": "FindWindowA",
+        "lib": "user32",
+        "num": 2,
+        "pre_parser": "pre_findwindowa",
+        "post_parser": ""
+      },
+      {
+      	"name": "FindWindowW",
+        "lib": "user32",
+        "num": 2,
+        "pre_parser": "pre_findwindoww",
+        "post_parser": ""
+      },
+      {
+      	"name": "GetFileSize",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_getfilesize",
+        "post_parser": ""
+      },
+      {
+      	"name": "OpenFileMappingA",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_openfilemappinga",
+        "post_parser": ""
+      },
+      {
+      	"name": "OpenFileMappingW",
+        "lib": "kernel32",
+        "num": 3,
+        "pre_parser": "pre_openfilemappingw",
+        "post_parser": ""
+      },
+      {
+      	"name": "SetWindowTextA",
+        "lib": "user32",
+        "num": 2,
+        "pre_parser": "pre_setwindowtexta",
+        "post_parser": ""
+      },
+      {
+      	"name": "SetWindowTextW",
+        "lib": "user32",
+        "num": 2,
+        "pre_parser": "pre_setwindowtextw",
+        "post_parser": ""
+      },
+      {
+        "name": "lstrcmpA",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_lstrcmpa",
+        "post_parser": ""
+      },
+      {
+        "name": "lstrcmpW",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_lstrcmpw",
+        "post_parser": ""
+      },
+      {
+      	"name": "_lopen",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_lopen",
+        "post_parser": ""
+      },
+      {
+      	"name": "_lcreat",
+        "lib": "kernel32",
+        "num": 2,
+        "pre_parser": "pre_lcreate",
+        "post_parser": ""
+      },
+      {
+        "name": "HttpOpenRequestA",
+        "lib": "wininet",
+        "num": 8,
+        "pre_parser": "pre_httpopenrequestsa",
+        "post_parser": ""
+      },
+      {
+        "name": "InternetConnectA",
+        "lib": "wininet",
+        "num": 8,
+        "pre_parser": "pre_internetconnecta",
+        "post_parser": ""
+      },
+      {
+        "name": "InternetConnectW",
+        "lib": "wininet",
+        "num": 8,
+        "pre_parser": "pre_internetconnectw",
+        "post_parser": ""
+      }
+    ]
+  }
+}

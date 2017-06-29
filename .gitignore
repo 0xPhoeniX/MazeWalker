@@ -1,0 +1,24 @@
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+.DS_Store
+
+# Recycle Bin used on file shares
+ipch/
+Debug/
+Release/
+Pin/
+
+*.exe
+*.pdb
+*.obj
+*.opensdf
+*.sdf
+*.suo
+*.pyc
+
+# Windows shortcuts
+*.lnk
