@@ -10,7 +10,6 @@ Desktop.ini
 ipch/
 Debug/
 Release/
-Pin/
 
 *.exe
 *.pdb
