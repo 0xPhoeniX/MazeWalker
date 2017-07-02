@@ -7,7 +7,7 @@ MazeWalker’s goal is to reduce malware analysis time by automating runtime dat
 
 - **Packed code** - MazeWalker monitors all memory areas where code execution took place, to be able to reconstruct the whole execution later. If there was a code change in the already monitored area (runtime code decryption), then the new version will be saved too, for later analysis. This approach appears to be useful for general code unpacking.
 
-- **Position undefended code** - to solve indirect control flow change issues (`jmp eat`, `call [eax]`, etc.), the instruction reference address and the control flow change target address are collected for later usage during static phase.
+- **Position independent code** - to solve indirect control flow change issues (`jmp eat`, `call [eax]`, etc.), the instruction reference address and the control flow change target address are collected for later usage during static phase.
 
 - **System APIs** - it's no secret, that knowing system API parameters that were used during execution could be helpful in understanding malware internals and overall purpose. So, MazeWalker has a Python-based API call site analysis to save or alter API's params that were used. More could be read on the dedicated wiki page.
 
