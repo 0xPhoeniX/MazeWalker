@@ -1,9 +1,9 @@
 
 # Overview
 
-MazeWalker’s goal is to reduce malware analysis time by automating runtime data collection and better visualization eventually helping a researcher to concentrate on static analysis and less on its dynamic part. 
+MazeWalker’s goal is to reduce malware analysis time by automating runtime data collection and better visualization eventually helping a researcher to concentrate on static analysis and less on its dynamic part.
 
-<p align="center"><img src="./docs/overview.png"/></p>
+<p align="center"><img src="./docs/title.png"/></p>
 
 - **Packed code** - MazeWalker monitors all memory areas where code execution took place, to be able to reconstruct the whole execution later. If there was a code change in the already monitored area (runtime code decryption), then the new version will be saved too, for later analysis. This approach appears to be useful for general code unpacking.
 
