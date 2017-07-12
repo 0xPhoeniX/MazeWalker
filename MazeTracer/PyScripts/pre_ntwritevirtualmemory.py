@@ -30,10 +30,10 @@ def pre_analyzer(HANDLE_ProcessHandle,
         res.append(result)
         result = {"name": "NumberOfBytesToWrite", "data": ("0x%x" % NumberOfBytesToWrite.value)}
         res.append(result)
-        buf = (ctypes.c_char * NumberOfBytesToWrite.value).from_address(Buffer.value)
-        dump_file_name = "\\%d" % os.getpid() +"_0x%x" % BaseAddress.value + "_0x%x.mem" % NumberOfBytesToWrite.value
-        if buf.value and "out_dir" in kwargs and dump_file_name not in cfg.cache:
-            cfg.cache[dump_file_name] = 1
-            with open(kwargs["out_dir"] + dump_file_name, "wb") as f:
-                f.write(buf)
+        # buf = (ctypes.c_char * NumberOfBytesToWrite.value).from_address(Buffer.value)
+        # dump_file_name = "\\%d" % os.getpid() +"_0x%x" % BaseAddress.value + "_0x%x.mem" % NumberOfBytesToWrite.value
+        # if buf.value and "out_dir" in kwargs and dump_file_name not in cfg.cache:
+        #     cfg.cache[dump_file_name] = 1
+        #     with open(kwargs["out_dir"] + dump_file_name, "wb") as f:
+        #         f.write(buf)
     return json.dumps(res)
