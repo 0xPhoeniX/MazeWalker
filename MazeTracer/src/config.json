@@ -112,6 +112,10 @@
       {
         "name": "ole32.dll",
         "hash": "660b16d35c9f18da41624d3fc3175d3c"
+      },
+      {
+        "name": "wab32.dll",
+        "hash": "f91af7ddd70e696f152c8ae0e0d61de2"
       }
     ],
     "exphash": [
