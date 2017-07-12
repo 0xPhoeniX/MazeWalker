@@ -13,7 +13,7 @@ def pre_analyzer(DWORD_dwDesiredAccess,
         if "pin_dir" in kwargs and "out_dir" in kwargs:
             process = subprocess.Popen(kwargs["pin_dir"] +
                                        "/pin.exe -unique_logfile -pid " + str(pid.value) +
-                                       " -t " + kwargs["pin_dir"] + "/MazeWalker.dll -cfg " +
+                                       " -t " + kwargs["pin_dir"] + "/MazeTracer.dll -cfg " +
                                        kwargs["pin_dir"] + "/config.json" +
                                        " -out " + kwargs["out_dir"] + " -unique_logfile")
         res = []
