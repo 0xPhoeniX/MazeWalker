@@ -142,6 +142,7 @@ bool save_calls(JSON_Object *root_object, map<ADDRINT, CALL_INFO> &calls)
 		json_object_set_string(call, "name", citer->second.name);
 		json_object_set_number(call, "target", citer->first);
 		json_object_set_number(call, "is_reg", citer->second.isRegBased);
+		json_object_set_number(call, "suspect", citer->second.isSuspect);
 
 		json_array_append_value(calls_ar, call_val);
 	}
@@ -184,6 +185,26 @@ void save_api_log(JSON_Object *root_object, ADDRINT tid)
 	json_object_set_value(root_object, "api_parameters", api_params_val);
 }
 
+void detect_push_as_call(map<ADDRINT, BASIC_BLOCK_INFO> &bbls, map<ADDRINT, CALL_INFO> &calls)
+{
+	map<ADDRINT, CALL_INFO>::iterator citer;
+	map<ADDRINT, CALL_ITEM>::iterator callee;
+
+	for (citer = calls.begin(); citer != calls.end(); citer++)
+	{
+		for (callee = citer->second.callees.begin(); 
+			 callee != citer->second.callees.end(); 
+			 callee++)
+		{
+			if (bbls.find(callee->first + 5) != bbls.end())
+			{
+				citer->second.isSuspect = 0;
+				break;
+			}
+		}
+	}
+}
+
 /* ===================================================================== */
 // Analysis routines
 /* ===================================================================== */
@@ -219,6 +240,7 @@ Maze output format:
 						"target":	1234,
 						"is_reg":	1,
 						"execs":	4,
+						"suspect":  1,
 						"callees":	[ {"ref": 0x123456, "execs": 1} ],
 						"bbl_ids":	[]
 					}
@@ -263,6 +285,9 @@ void save_maze_log()
 			{
 				JSON_Value *thread_value = json_value_init_object();
 				JSON_Object *thread_object = json_value_get_object(thread_value);
+
+				// apply post processing 
+				detect_push_as_call(tid_basic_blocks[i], tid_calls[i]);
 
 				// save basic data before the memory area
 				save_thread_aux(thread_object, i);
