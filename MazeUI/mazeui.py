@@ -11,7 +11,7 @@ from PyQt5.QtGui import QIcon
 
 from mazeui.config import Config
 from mazeui.widgets.MazeWalkerWidget import MazeWalkerWidget
-from mazeui.core.helpers import idp_hooks
+from mazeui.core.helpers import idp_hooks, ui_hooks
 
 __VERSION__ = 0.1
 
@@ -69,6 +69,7 @@ class MazeUIPluginForm(idaapi.PluginForm):
         Manages the IDA UI extensions / modifications.
         """
         idp_hooks.initialize()
+        ui_hooks.initialize()
 
     def Show(self):
         """

@@ -74,6 +74,7 @@
     <GenerateManifest>false</GenerateManifest>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)$(Configuration)\$(Platform)\obj\</IntDir>
+    <TargetName>$(SolutionName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

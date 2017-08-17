@@ -1,7 +1,9 @@
 from mazeui.core.helpers.api_tags import get_api_tag
+from mazeui.core.helpers.utils import PatchCall
 import idc
 import idaapi
 import idautils
+import ida_ua
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 
@@ -70,10 +72,9 @@ class Maze(QTreeWidget):
                     if tid == thread['tid']:
                         for bbl in thread['bbls']:
                             ea = bbl['start']
-                            for _ in range(bbl['inst']):
-                                inst_size = idc.MakeCode(ea)
+                            for _ in range(bbl['end'] - bbl['start']):
                                 idaapi.set_item_color(ea, 0x49feaf)
-                                ea += inst_size
+                                ea += 1
 
     def mark_calls(self, mem_area_id):
         if not self._from_idb:
@@ -85,6 +86,7 @@ class Maze(QTreeWidget):
                                 fname = call['name'].encode('ascii')
                                 if len(call['callees']) == 1:
                                     ref = call['callees'][0]['addr']
+                                    # propagate symbols into calls which wrap jmps
                                     if idc.GetMnem(ref) == "jmp":
                                         while fname in self.dup_apis:
                                             fname += "_"
@@ -94,20 +96,29 @@ class Maze(QTreeWidget):
                                             if wrap_call["target"] == ref:
                                                 wrap_call['real_call'] = call
                                         continue
-
-                                for callee in call['callees']:
-                                    op = idc.GetOpType(callee['addr'],0)
-                                    if op == 2:
-                                        val = idc.GetOperandValue(callee['addr'], 0)
-                                        if val is not None and val > 0:
-                                            idc.MakeName(val, fname)
                             else:
                                 fname = idc.GetFunctionName(call['target'])
                                 if len(fname) == 0:
                                     fname = "0x%x" % call['target']
-                            if call['is_reg']:
-                                for callee in call['callees']:
+                                elif 'sub_' in fname:
+                                    fname = None
+
+                            for callee in call['callees']:
+                                op = idc.GetOpType(callee['addr'],0)
+                                if op == ida_ua.o_mem and fname is not None:
+                                    val = idc.GetOperandValue(callee['addr'], 0)
+                                    if val is not None and val > 0:
+                                        idc.MakeName(val, fname)
+                                elif op == ida_ua.o_reg:
                                     idc.MakeComm(callee['addr'], fname)
+                                elif op == ida_ua.o_near and call['suspect']:
+                                    data_size = idc.Dword(callee['addr'] + 1)
+                                    if data_size < 2:
+                                        print "[INFO] Not enough place for patching."
+                                    elif data_size <= 0xFF:
+                                        PatchCall(callee['addr'])
+                                    else:
+                                        print "[INFO] Manual check suspect call: %x" % (callee['addr'])
 
     def mark_threads(self, mem_area_id):
         def get_tfuncs():
@@ -127,7 +138,10 @@ class Maze(QTreeWidget):
         for tfunc in get_tfuncs():
             fname = idc.GetFunctionName(tfunc)
             if len(fname) == 0:
-                fname = "0x%x" % tfunc
+                if idc.MakeFunction(tfunc) == 0:
+                    fname = "0x%x" % tfunc
+                else:
+                    fname = idc.GetFunctionName(tfunc)
             root = QTreeWidgetItem(self.invisibleRootItem(),
                                    [fname, hex(int(tfunc)),
                                     fname, hex(int(tfunc)),
