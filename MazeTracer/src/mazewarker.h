@@ -34,6 +34,7 @@ typedef struct _CALL_INFO
 	ADDRINT execs;
 	ADDRINT base;
 	short isRegBased;
+	char isSuspect;
 	list<ADDRINT> rets;
 	list<ADDRINT> bbl_id;
 	map<ADDRINT, CALL_ITEM> callees;
