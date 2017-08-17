@@ -26,18 +26,14 @@ def initialize():
     global idphook
     try:
         idp_hook_stat = "un"
-        print "IDP hook: checking for hook..."
         idphook
-        print "IDP hook: unhooking...."
         idphook.unhook()
         idphook = None
     except:
-        print "IDP hook: not installed, installing now...."
         idp_hook_stat = ""
         idphook = hook_dispatcher()
         idphook.hook()
 
 def register_rename_callback(callback):
     global renamed_callbacks
-    print "Registering rename callback..."
     rename_callbacks.append(callback)
