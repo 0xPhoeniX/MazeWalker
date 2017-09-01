@@ -31,4 +31,4 @@ MazeWalker is based on Intel's Pin framework for runtime data collection and IDA
 <p align="center"><img src="./docs/design.png"/></p>
 
 # Usage
-Please refer to wiki for detailed explanation.
+Please refer to [wiki](https://github.com/0xPhoeniX/MazeWalker/wiki/First-Steps) for detailed explanation.
