@@ -13,63 +13,129 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Memory">
+      <UniqueIdentifier>{6663e559-4d68-4ef5-b354-86380e14b4aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Memory">
+      <UniqueIdentifier>{4f0ed89d-15b7-457e-9b18-5d74afb8fa3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Trace">
+      <UniqueIdentifier>{bbb92f66-85ca-4da8-9533-f4ee97500fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Trace">
+      <UniqueIdentifier>{fe32e86e-c561-4f66-8acb-745fab74fa25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Analysis">
+      <UniqueIdentifier>{aa117c55-9ba1-4761-80ee-f783b18553f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Analysis">
+      <UniqueIdentifier>{38cebede-e472-4dd5-8468-b4ad663efff1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mazewarker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="crypto.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="parson.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="api_log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="memory_log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="context_switch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="trace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cfg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="python_support.cpp">
+    <ClCompile Include="jsoncpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="log.cpp">
+    <ClCompile Include="BBL.cpp">
+      <Filter>Source Files\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="Call.cpp">
+      <Filter>Source Files\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="Blob.cpp">
+      <Filter>Source Files\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="PeImage.cpp">
+      <Filter>Source Files\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="mazewarker.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryArea.cpp">
+      <Filter>Source Files\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="WinAddress.cpp">
+      <Filter>Source Files\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>Source Files\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessTrace.cpp">
+      <Filter>Source Files\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryTracer.cpp">
+      <Filter>Source Files\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="PythonAnalysis.cpp">
+      <Filter>Source Files\Analysis</Filter>
+    </ClCompile>
+    <ClCompile Include="ContextAnalyzer.cpp">
+      <Filter>Source Files\Analysis</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pe.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mazewarker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="crypto.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="parson.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="arch_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="python_support.h">
+    <ClInclude Include="BBL.h">
+      <Filter>Header Files\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="Call.h">
+      <Filter>Header Files\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryArea.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="IMemoryAreaMaker.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Image.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="IReportObject.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryAreaMaker.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="PEImage.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Blob.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="IAddress.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="WinAddress.h">
+      <Filter>Header Files\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>Header Files\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessTrace.h">
+      <Filter>Header Files\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryTracer.h">
+      <Filter>Header Files\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="ContextAnalyzer.h">
+      <Filter>Header Files\Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="PythonAnalysis.h">
+      <Filter>Header Files\Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="PythonTypesInternal.h">
+      <Filter>Header Files\Analysis</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

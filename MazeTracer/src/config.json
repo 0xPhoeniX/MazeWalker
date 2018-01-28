@@ -134,11 +134,14 @@
     "mods": [
       "mazewalker",
       "pinvm",
-      "wow64cpu"
+      "wow64cpu",
+	  "pin"
     ]
   },
   "pin32_dir": "PROVIDE_FULL_PATH",
   "pin64_dir": "PROVIDE_FULL_PATH",
+  "out_dir":   "PROVIDE_FULL_PATH",
+  "preload_libs32": ["python32.dll"],
   "api_monitor": {
     "script_path": "PROVIDE_FULL_PATH_TO_PySCRIPTS",
     "apis": [

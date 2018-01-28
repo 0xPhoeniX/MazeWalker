@@ -1,5 +1,4 @@
 #include "crypto.h"
-#include "arch_types.h"
 #include <stdlib.h>
 #include <cstringt.h>
 
@@ -139,9 +138,9 @@ void md5_init(MD5_CTX *ctx)
    ctx->state[3] = 0x10325476; 
 }  
 
-void md5_update(MD5_CTX *ctx, uchar data[], U_INT len) 
+void md5_update(MD5_CTX *ctx, uchar data[], unsigned int len) 
 {  
-   U_INT i;
+   unsigned int i;
    
    for (i=0; i < len; ++i) { 
       ctx->data[ctx->datalen] = data[i]; 
@@ -156,7 +155,7 @@ void md5_update(MD5_CTX *ctx, uchar data[], U_INT len)
 
 void md5_final(MD5_CTX *ctx, uchar hash[]) 
 {  
-   U_INT i;
+   unsigned int i;
    
    i = ctx->datalen; 
    
