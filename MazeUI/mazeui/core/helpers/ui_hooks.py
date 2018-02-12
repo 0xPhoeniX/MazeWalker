@@ -1,5 +1,5 @@
 from ida_kernwin import *
-from mazeui.core.helpers.utils import PatchCall
+from mazeui.core.helpers import CallAsPushAnalysis
 
 hooks = None
 
@@ -12,7 +12,7 @@ class fix_call_handler(action_handler_t):
         action_handler_t.__init__(self)
 
     def activate(self, ctx):
-        PatchCall(ctx.cur_ea)
+        CallAsPushAnalysis.PatchCall(ctx.cur_ea)
         return 1
 
     def update(self, ctx):

@@ -119,4 +119,4 @@ tags = {
 def get_api_tag(api_name):
     if api_name in api_tags:
         return tags[api_tags[api_name]]
-    return "Untagged"
+    return 'Undefined'

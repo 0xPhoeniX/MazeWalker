@@ -9,11 +9,13 @@ import idaapi
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QIcon
 
-from mazeui.config import Config
-from mazeui.widgets.MazeWalkerWidget import MazeWalkerWidget
+from mazeui.Maze import Config
+from mazeui.widgets.MazeUITraceWindow import MazeUITraceWindow
+from mazeui.widgets.MazeUIBBLWindow import MazeUIBBLWindow
+from mazeui.widgets.MazeUIToolbar import MazeUIToolbar
 from mazeui.core.helpers import idp_hooks, ui_hooks
 
-__VERSION__ = 0.1
+__VERSION__ = 0.2
 
 
 #################################################################
@@ -28,48 +30,44 @@ class MazeUIPluginForm(idaapi.PluginForm):
         """
         idaapi.PluginForm.__init__(self)
         self.Widgets = []
-        self.config = Config()
-        self.iconp = self.config.icons_path
-        self.maze_analysis = None
+        self.iconp = Config().icons_path
 
     def OnCreate(self, form):
         self.parent = self.FormToPyQtWidget(form)
         self.parent.setWindowIcon(QIcon(self.iconp + 'user-ironman.png'))
 
         self.setupWidgets()
-        self.setupUI()
+
+        idp_hooks.initialize()
+        ui_hooks.initialize()
 
     def setupWidgets(self):
         """
         Instantiates all widgets
         """
 
-        # Append to the list every widget you have
-        self.Widgets.append(MazeWalkerWidget(self))
+        mazeTree = MazeUITraceWindow(self)
+        bblTable = MazeUIBBLWindow(self)
 
-        self.setupMazeUIForm()
-
-    def setupMazeUIForm(self):
-        """
-        Already initialized widgets are arranged in tabs on the main window.
-        """
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.setTabsClosable(False)
+        self.toolbar = MazeUIToolbar()
 
-        for widget in self.Widgets:
-            self.tabs.addTab(widget, widget.icon, widget.name)
+        self.tabs.addTab(mazeTree, mazeTree.icon, mazeTree.name)
+        self.tabs.addTab(bblTable, bblTable.icon, bblTable.name)
+        self.toolbar.MazeLoaded.connect(mazeTree.OnDataLoad)
+        self.toolbar.MazeLoaded.connect(bblTable.OnDataLoad)
+        self.toolbar.MazeReload.connect(mazeTree.OnDataReload)
+        self.toolbar.MazeReload.connect(bblTable.OnDataReLoad)
 
         layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.toolbar)
         layout.addWidget(self.tabs)
 
         self.parent.setLayout(layout)
 
-    def setupUI(self):
-        """
-        Manages the IDA UI extensions / modifications.
-        """
-        idp_hooks.initialize()
-        ui_hooks.initialize()
+        self.toolbar.OnDataPresence()
+
 
     def Show(self):
         """
