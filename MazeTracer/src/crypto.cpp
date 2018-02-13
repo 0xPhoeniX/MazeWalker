@@ -198,38 +198,38 @@ void md5_final(MD5_CTX *ctx, uchar hash[])
 
 int calc_buf_md5(const char *buf, size_t size, char *md5)
 {
-	MD5_CTX ctx;
-	uchar *r_hash;
-	char md5_str[32 + 1] = {0};
-	uint i = 0;
-	
-	if((r_hash = (uchar*)malloc(16)))
-	{
-		md5_init(&ctx); 
-		md5_update(&ctx, (uchar*)buf, size); 
-		md5_final(&ctx, r_hash);
+    MD5_CTX ctx;
+    uchar *r_hash;
+    char md5_str[32 + 1] = {0};
+    uint i = 0;
+    
+    if((r_hash = (uchar*)malloc(16)))
+    {
+        md5_init(&ctx); 
+        md5_update(&ctx, (uchar*)buf, size); 
+        md5_final(&ctx, r_hash);
 
-		for(; i < 16; i++)
-		{
-			char hex_char[3];
-			_itoa(r_hash[i], hex_char, 16);
-		
-			if(hex_char[1] == '\0') {
-				md5_str[i*2] = '0';
-				md5_str[i*2+1] = hex_char[0];
-			}
-			else {
-				md5_str[i*2] = hex_char[0];
-				md5_str[i*2+1] = hex_char[1];
-			}
-		}
-	
-		strncpy(md5, md5_str, 32 + 1);
-		free(r_hash);
-		r_hash = NULL;
+        for(; i < 16; i++)
+        {
+            char hex_char[3];
+            _itoa(r_hash[i], hex_char, 16);
+        
+            if(hex_char[1] == '\0') {
+                md5_str[i*2] = '0';
+                md5_str[i*2+1] = hex_char[0];
+            }
+            else {
+                md5_str[i*2] = hex_char[0];
+                md5_str[i*2+1] = hex_char[1];
+            }
+        }
+    
+        strncpy(md5, md5_str, 32 + 1);
+        free(r_hash);
+        r_hash = NULL;
 
-		return 0;
-	}
-	
-	return 1;
+        return 0;
+    }
+    
+    return 1;
 }
