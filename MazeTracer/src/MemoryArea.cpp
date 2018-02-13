@@ -25,10 +25,9 @@ namespace MazeWalker {
 	class State {
 	public:
 		State(int base, size_t size, int entry) : _entry(entry), _size(size) {
-			_data = new char[size];
+			_data = new char[_size];
 			if (_data) {
-				memset(_data, 0, _size);
-				memcpy(_data, (void*)base, _size);
+				memcpy(_data, (char*)base, _size);
 			}
 			threads.reserve(THREAD_LIMIT);
 			for (int i = 0; i < THREAD_LIMIT; i++) { threads[i] = 0; }
@@ -61,6 +60,8 @@ namespace MazeWalker {
 		_states = NULL;
 		PLAYER l = NULL;
 
+		if (base == 0 || size == 0)
+			return;
 		_states = new std::list<PLAYER>;
 		l = new LAYER;
 		if (l && _states) {
@@ -73,14 +74,12 @@ namespace MazeWalker {
 				l->entry = entry;
 				l->id = MemoryArea::_idGenerator++;
 				// LOG(string(__FUNCTION__) + ": Adding ma: "+ hexstr(base) + " with id " + decstr(l->id) + "\n");
-				memset(l->data, 0, size);
-				memcpy(l->data, (void*)base, size);
+				memcpy(l->data, (char*)base, size);
 				((std::list<PLAYER>*)(_states))->push_back(l);
 				return;
 			}
 		}
 		delete _states;
-		delete [] l->data;
 		delete l;
 	}
 
