@@ -421,6 +421,11 @@ VOID Fini(INT32 code, VOID *v)
     save_maze_log();
 }
 
+VOID OutOfMemoryCallback(size_t size, VOID* v) {
+	LOG(string(__FUNCTION__) + ": Out of memory.\n");
+	save_maze_log();
+}
+
 int main(int argc, char *argv[])
 {
     PIN_InitSymbols();
@@ -445,6 +450,9 @@ int main(int argc, char *argv[])
 
 		// Internal thread to terminate execution once delay timeout hit
         PIN_SpawnInternalThread(InternalTimerThread, 0, 0, 0);
+
+		// Monitor for out of memory issues
+		PIN_AddOutOfMemoryFunction(OutOfMemoryCallback, 0);
 
         // Start the program, never returns
         PIN_StartProgram();
