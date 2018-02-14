@@ -1,89 +1,146 @@
 #include <string>
-#include <list>
+#include <map>
+#include <fstream>
+#include <algorithm>
+#include "json\json.h"
 #include "cfg.h"
-#include "parson.h"
-#include "mazewarker.h"
+#include <Windows.h>
 
-using namespace std;
 
-MAZE_CFG cfg;
+namespace MazeWalker {
 
-int load_cfg(const char* path)
-{
-	JSON_Value *root_value = json_parse_file(path);
-	if (root_value) {
-		JSON_Object *root_object = json_value_get_object(root_value);
+    CFG::CFG() {
+        _cfg_data = _hook_data = 0;
+    }
 
-		JSON_Object* whitelist = json_object_get_object (root_object, "whitelist");
-		JSON_Object* api_mon = json_object_get_object (root_object, "api_monitor");
+    bool CFG::Load(const char* path) {
+        if (_cfg_data)
+            return true;
 
-		if (whitelist == NULL ||
-			api_mon == NULL)
-			goto err;
+        if (path) {
+            _cfg_data = new Json::Value();
+            if (_cfg_data) {
+                std::ifstream file(path);
+                file >> (*(Json::Value*)_cfg_data);
 
-		JSON_Array* apis = json_object_get_array (api_mon, "apis");
-		cfg.script_path = json_object_get_string(api_mon, "script_path");
-		cfg.pin32dir = json_object_get_string(root_object, "pin32_dir");
-		cfg.pin64dir = json_object_get_string(root_object, "pin64_dir");
-		size_t api_list_size = json_array_get_count(apis);
-		for(int i = 0; i < api_list_size; i++) {
-			JSON_Object* item = json_array_get_object(apis, i);
-			if (item) {
-				API_LOG_ITEM api;
-				api.name = json_object_get_string(item, "name");
-				api.lib = json_object_get_string(item, "lib");
-				api.pre_parser = json_object_get_string(item, "pre_parser");
-				api.post_parser = json_object_get_string(item, "post_parser");
-				api.vars_num = (short)json_object_get_number(item, "num");
-				cfg.api_to_log.push_back(api);
-			}
-		}
+                _hook_data = new std::map<std::string, std::map<std::string, ApiHook>>;
+                if (_hook_data) {
+                    std::map<std::string, std::map<std::string, ApiHook*>>& hook_data = 
+                        *((std::map<std::string, std::map<std::string, ApiHook*>>*)_hook_data);
 
-		// It's needed to whitelist PE files which are loaded unconventionaly and we do not get notification about
-		JSON_Array *imphash = json_object_get_array(whitelist, "imphash");
-		JSON_Array *exphash = json_object_get_array(whitelist, "exphash");
-		JSON_Array *path = json_object_get_array(whitelist, "path");
-		JSON_Array *mods = json_object_get_array(whitelist, "mods");
+                    Json::Value& cfg_data = (*(Json::Value*)_cfg_data);
+                    for (unsigned i = 0; i < cfg_data["api_monitor"]["apis"].size(); i++) {
+                        Json::Value& apis = cfg_data["api_monitor"]["apis"][i];
+                        std::string lib = apis["lib"].asString();
+                        std::string api_name = apis["name"].asString();
+                        std::transform(lib.begin(), lib.end(), lib.begin(), ::tolower);
+                        std::transform(api_name.begin(), api_name.end(), api_name.begin(), ::tolower);
+                        hook_data[lib][api_name] = new ApiHook(apis["lib"].asCString(),
+                                                               apis["name"].asCString(),
+                                                               strlen(apis["pre_parser"].asCString()) ? apis["pre_parser"].asCString() : 0,
+                                                               strlen(apis["post_parser"].asCString()) ? apis["post_parser"].asCString() : 0,
+                                                               apis["num"].asInt());
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-		if (imphash == NULL ||
-			exphash == NULL ||
-			path == NULL	||
-			mods == NULL)
-			goto err;
-		
-		size_t imphash_size = json_array_get_count(imphash);
-		for(int i = 0; i < imphash_size; i++) {
-			JSON_Object* item = json_array_get_object(imphash, i);
-			if (item) {
-				string hash = json_object_get_string(item, "hash");
-				cfg.hash_whitelist.push_back(hash);
-			}
-		}
+    CFG& CFG::Instance() {
+        static CFG config;
+        return config;
+    }
 
-		size_t exphash_size = json_array_get_count(exphash);
-		for(int i = 0; i < exphash_size; i++) {
-			JSON_Object* item = json_array_get_object(exphash, i);
-			if (item) {
-				string hash = string(json_object_get_string(item, "hash"));
-				cfg.hash_whitelist.push_back(hash);
-			}
-		}
+    bool CFG::PreloadLibraries() const {
+        Json::Value& cfg_data = (*(Json::Value*)_cfg_data);
+        for (unsigned i = 0; i < cfg_data["preload_libs32"].size(); i++) {
+            //log("Loading: " + cfg_data["preload_libs32"][i].asString() + "\n");
+            HMODULE mod = LoadLibraryA(cfg_data["preload_libs32"][i].asCString());
+            if (mod == NULL) {
+                //log("\t load failed\n");
+                return false;
+            }
+        }
+        return true;
+    }
 
-		size_t path_size = json_array_get_count(path);
-		for(int i = 0; i < path_size ; i++) {
-			string item = string(json_array_get_string(path, i));
-			cfg.path_whitelist.push_back(item);
-		}
+    bool CFG::isHashWhitelisted(const char* hash) const {
+        if (hash && strlen(hash) > 0) {
+            std::string _hash(hash);
 
-		size_t mods_size = json_array_get_count(mods);
-		for(int i = 0; i < mods_size ; i++) {
-			string item = string(json_array_get_string(mods, i));
-			cfg.mods_whitelist.push_back(item);
-		}
+            for (unsigned i = 0; i < (*(Json::Value*)_cfg_data)["whitelist"]["imphash"].size(); i++) {
+                if ((*(Json::Value*)_cfg_data)["whitelist"]["imphash"][i]["hash"].asString() == _hash)
+                    return true;
+            }
 
-		return 1;
-	}
+            for (unsigned i = 0; i < (*(Json::Value*)_cfg_data)["whitelist"]["exphash"].size(); i++) {
+                if ((*(Json::Value*)_cfg_data)["whitelist"]["exphash"][i]["hash"].asString() == _hash)
+                    return true;
+            }
+        }
 
-err:
-	return 0;
+        return false;
+    }
+
+    bool CFG::isPathWhitelisted(const char* path) const {
+        if (path && strlen(path) > 0) {
+            for (unsigned i = 0; i < (*(Json::Value*)_cfg_data)["whitelist"]["path"].size(); i++) {
+                const char* wpath = (*(Json::Value*)_cfg_data)["whitelist"]["path"][i].asCString();
+                if (_strnicmp(path, wpath, strlen(wpath)) == 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool CFG::isModuleWhitelisted(const char* name) const {
+        if (name && strlen(name)) {
+            for (unsigned i = 0; i < (*(Json::Value*)_cfg_data)["whitelist"]["mods"].size(); i++) {
+                const char* wname = (*(Json::Value*)_cfg_data)["whitelist"]["mods"][i].asCString();
+                if (_strnicmp(name, wname, strlen(wname)) == 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    const ApiHook* CFG::getHook(const char* lib, const char* api) const {
+        std::map<std::string, std::map<std::string, ApiHook*>>& hook_data = 
+            *((std::map<std::string, std::map<std::string, ApiHook*>>*)_hook_data);
+
+        std::map<std::string, std::map<std::string, ApiHook*>>::iterator it;
+        std::map<std::string, ApiHook*>::iterator it2;
+        std::string loclib = std::string(lib);
+
+        std::transform(loclib.begin(), loclib.end(), loclib.begin(), ::tolower);
+        it = hook_data.find(loclib);
+        if (it != hook_data.end()) {
+            std::string locapi = std::string(api);
+            std::transform(locapi.begin(), locapi.end(), locapi.begin(), ::tolower);
+            it2 = it->second.find(locapi);
+            if (it2 != it->second.end()) {
+                return it2->second;
+            }
+        }
+
+        return NULL;
+    }
+
+    const char* CFG::getScriptsDir() const {
+        return (*(Json::Value*)_cfg_data)["api_monitor"]["script_path"].asCString();
+    }
+
+    const char* CFG::getOutputDir() const {
+        return (*(Json::Value*)_cfg_data)["out_dir"].asCString();
+    }
+
+    const char* CFG::getRootDir() const {
+        return (*(Json::Value*)_cfg_data)["pin32_dir"].asCString();
+    }
 }

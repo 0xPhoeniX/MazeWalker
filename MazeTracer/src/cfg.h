@@ -1,32 +1,70 @@
-#ifndef _MAZEWARKER_CFG_H_
-#define _MAZEWARKER_CFG_H_
+#pragma once
 
-#include <string>
-#include <vector>
+namespace MazeWalker {
+    
+    class ApiHook {
+    public:
+        // ctor. 
+        // @param l Library name.
+        // @param n API name.
+        // @param pre Pre-API invocation analysis routine name.
+        // @param post Post-API invocation analysis routine name.
+        ApiHook(const char* l,
+                const char* n,
+                const char* pre,
+                const char* post,
+                int vars) : name(n), lib(l),
+                            pre_parser(pre),
+                            post_parser(post),
+                            vars_num(vars) {}
 
-typedef struct {
-	std::string name;
-	std::string lib;
-	std::string pre_parser;
-	std::string post_parser;
-	short vars_num;
-} API_LOG_ITEM;
+        ~ApiHook() {}
+        const char* name;
+        const char* lib;
+        const char* pre_parser;
+        const char* post_parser;
+        int vars_num;
+    };
 
-typedef struct _MAZE_CFG {
-	std::vector<std::string> hash_whitelist;
-	std::vector<std::string> path_whitelist;
-	std::vector<std::string> mods_whitelist;
-	std::vector<API_LOG_ITEM> api_to_log;
-	std::string script_path;
-	std::string output_dir;
-	std::string pin32dir;
-	std::string pin64dir;
-} MAZE_CFG;
+    // Configuration storage class.
+    class CFG {
+    public:
+        ~CFG() {}
 
-extern MAZE_CFG cfg;
+        static CFG& Instance();
 
-// load mazewalker configuration file
-//		path - path to the file
-int load_cfg(const char* path);
+        // Parse and load configuration from the file.
+        bool Load(const char* path);
 
-#endif
+        // As PIN does not support dynamic loading of the libraries, 
+        // this trick is used to load whatever lib is needed before the 
+        // instrumentation starts.
+        bool PreloadLibraries() const;
+
+        // Check if the hash is white listed by the configuration. 
+        // Currently imphash and exphash are supported.
+        bool isHashWhitelisted(const char* hash) const;
+
+        // Check if the path is white listed by the configuration.
+        // It is used to filter out OS libraries from instrumentation.
+        bool isPathWhitelisted(const char* path) const;
+
+        // Check if the module is white listed in the configuration.
+        // It is used to filter out OS libraries from instrumentation.
+        bool isModuleWhitelisted(const char* name) const;
+        const char* getScriptsDir() const;
+        const char* getRootDir() const;
+        const char* getOutputDir() const;
+
+        // Returns a description of API analysis configuration.
+        const ApiHook* getHook(const char* lib, const char* api) const;
+
+    private:
+        CFG();
+        CFG(const CFG &) { }
+        CFG &operator=(const CFG &) { return *this; }
+
+        void* _cfg_data;
+        void* _hook_data;
+    };
+}

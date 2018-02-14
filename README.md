@@ -3,7 +3,7 @@
 
 MazeWalker’s goal is to reduce malware analysis time by automating runtime data collection and better visualization eventually helping a researcher to concentrate on static analysis and less on its dynamic part.
 
-<p align="center"><img src="./docs/title.png"/></p>
+<p align="center"><img src="./images/title.png"/></p>
 
 - **Packed code** - MazeWalker monitors all memory areas where code execution took place, to be able to reconstruct the whole execution later. If there was a code change in the already monitored area (runtime code decryption), then the new version will be saved too, for later analysis. This approach appears to be useful for general code unpacking.
 
@@ -19,16 +19,16 @@ MazeWalker’s goal is to reduce malware analysis time by automating runtime dat
 
 - **Visualization** - all collected runtime information is processed by a IDAPython plugin and presented in more (hopefully) meaningful way. The new way of visualization, takes into account the runtime information and shows how the code was executing per-thread view. This way helps more logically understand the design of the program and further focus on a particular task. 
 
-<p align="center"><img src="./docs/viz_tranz.png"/></p>
+<p align="center"><img src="./images/viz_tranz.png"/></p>
 
 - **Focus** - in case there is some particular topic of interest for the analyzed sample (Network interaction), there is a way to filter out the execution data and focus only on the specifics of the research.
 
-<p align="center"><img src="./docs/filter.png"/></p>
+<p align="center"><img src="./images/filter.png"/></p>
 
 # Design
 MazeWalker is based on Intel's Pin framework for runtime data collection and IDAPython for in-IDA visualization.
-  
-<p align="center"><img src="./docs/design.png"/></p>
+
+<p align="center"><img src="./images/design.png"/></p>
 
 # Usage
 Please refer to [wiki](https://github.com/0xPhoeniX/MazeWalker/wiki/First-Steps) for detailed explanation.

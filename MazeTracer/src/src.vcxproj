@@ -120,14 +120,15 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/D_SECURE_SCL=0 %(AdditionalOptions)</AdditionalOptions>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)Pin\ia32\lib;$(SolutionDir)Pin\ia32\lib-ext;$(SolutionDir)Pin\extras\xed-ia32\lib;$(SolutionDir)lib;C:\Python27\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdll-32.lib;libxed.lib;pin.lib;pinvm.lib;libcpmt.lib;libcmt.lib;python27.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Pin\ia32\lib;$(SolutionDir)Pin\ia32\lib-ext;$(SolutionDir)Pin\extras\xed-ia32\lib;$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ntdll-32.lib;libxed.lib;pin.lib;pinvm.lib;libcpmt.lib;libcmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>Ptrace_DllMainCRTStartup@12</EntryPointSymbol>
       <AdditionalOptions>/EXPORT:main %(AdditionalOptions)</AdditionalOptions>
@@ -161,32 +162,44 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="api_log.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="BBL.cpp" />
+    <ClCompile Include="Blob.cpp" />
+    <ClCompile Include="Call.cpp" />
     <ClCompile Include="cfg.cpp" />
-    <ClCompile Include="context_switch.cpp" />
+    <ClCompile Include="ContextAnalyzer.cpp" />
     <ClCompile Include="crypto.cpp" />
-    <ClCompile Include="log.cpp" />
+    <ClCompile Include="jsoncpp.cpp" />
     <ClCompile Include="mazewarker.cpp" />
-    <ClCompile Include="memory_log.cpp" />
-    <ClCompile Include="parson.c" />
-    <ClCompile Include="pe.cpp" />
-    <ClCompile Include="python_support.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="trace.cpp" />
+    <ClCompile Include="MemoryArea.cpp" />
+    <ClCompile Include="MemoryTracer.cpp" />
+    <ClCompile Include="PeImage.cpp" />
+    <ClCompile Include="ProcessTrace.cpp" />
+    <ClCompile Include="PythonAnalysis.cpp" />
+    <ClCompile Include="Thread.cpp" />
+    <ClCompile Include="WinAddress.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="arch_types.h" />
+    <ClInclude Include="BBL.h" />
+    <ClInclude Include="Blob.h" />
+    <ClInclude Include="Call.h" />
     <ClInclude Include="cfg.h" />
     <ClInclude Include="crypto.h" />
-    <ClInclude Include="mazewarker.h" />
-    <ClInclude Include="parson.h" />
-    <ClInclude Include="pe.h" />
-    <ClInclude Include="python_support.h">
+    <ClInclude Include="ContextAnalyzer.h" />
+    <ClInclude Include="Image.h" />
+    <ClInclude Include="IMemoryAreaMaker.h" />
+    <ClInclude Include="IAddress.h" />
+    <ClInclude Include="IReportObject.h" />
+    <ClInclude Include="MemoryArea.h" />
+    <ClInclude Include="MemoryAreaMaker.h" />
+    <ClInclude Include="MemoryTracer.h" />
+    <ClInclude Include="PEImage.h" />
+    <ClInclude Include="ProcessTrace.h" />
+    <ClInclude Include="PythonAnalysis.h" />
+    <ClInclude Include="PythonTypesInternal.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="WinAddress.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.json" />
