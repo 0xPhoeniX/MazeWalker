@@ -33,7 +33,7 @@ class MazeTraceTree(QTreeWidget):
     def _add_child(self, root, ea, tid, depth):
         if ea == 0 or root.text(4) == "y":
             return
-        if depth > 80:
+        if depth > 30:
             logger = logging.getLogger(__name__)
             logger.info("Maximum recursion depth exceeded!")
             return
