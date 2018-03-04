@@ -62,11 +62,12 @@ class MazeTraceTree(QTreeWidget):
         root.setText(4, "y")
 
     def _onClickItem(self, item):
+        fname = item.text(0)
         xref = int(item.text(1), 16)
         tid = int(item.text(6), 16)
         target = int(item.text(3), 16)
         xrefID = int(item.text(7), 16)
-        Maze().addCallParams(target, xref, xrefID, tid)
+        Maze().addCallParams(fname, target, xref, xrefID, tid)
         idc.Jump(xref)
 
     def filterByGroup(self, grp):

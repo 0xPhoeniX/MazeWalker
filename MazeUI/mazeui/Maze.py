@@ -194,7 +194,7 @@ class Maze(dict):
 
         return None, None, -1
 
-    def addCallParams(self, target, xref_addr, xrefID, tid):
+    def addCallParams(self, fname, target, xref_addr, xrefID, tid):
         if xrefID > -1:
             for thread in self["mem_areas"][0]['threads']:
                 if tid == thread['tid']:
@@ -202,7 +202,7 @@ class Maze(dict):
                         if call["target"] == target:
                             for xref in call["xrefs"]:
                                 if xref["addr"] == xref_addr:
-                                    cmt = ""
+                                    cmt = str(fname).encode('ascii') + "\n"
                                     for param in xref['params'][xrefID]:
                                         cmt += (param['name'] + " : " + str(param['data']) + "\n").encode('ascii')
                                     idc.MakeComm(xref_addr, cmt)
