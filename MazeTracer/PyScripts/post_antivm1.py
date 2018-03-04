@@ -38,4 +38,3 @@ def post_analyzer(HDEVINFO_DeviceInfoSet,
             res.append({'name': 'fixed_PropertyBuffer', 'data': PropertyBuffer.value})
             
             return json.dumps(res)
-    return None

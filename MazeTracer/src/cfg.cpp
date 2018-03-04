@@ -5,6 +5,7 @@
 #include "json\json.h"
 #include "cfg.h"
 #include <Windows.h>
+#include "Logger.h"
 
 
 namespace MazeWalker {
@@ -14,6 +15,8 @@ namespace MazeWalker {
     }
 
     bool CFG::Load(const char* path) {
+        std::ostringstream log_path, trace_fname, scripts_path;
+
         if (_cfg_data)
             return true;
 
@@ -41,6 +44,16 @@ namespace MazeWalker {
                                                                strlen(apis["post_parser"].asCString()) ? apis["post_parser"].asCString() : 0,
                                                                apis["num"].asInt());
                     }
+
+                    log_path << getOutputDir() << "\\maze_log_" << GetCurrentProcessId() << ".txt";
+                    log_file_path = _strdup(log_path.str().c_str());
+                    trace_fname << getOutputDir() << "\\maze_walk_" << GetCurrentProcessId() << ".json";
+                    trace_log = _strdup(trace_fname.str().c_str());
+
+                    root_dir = _strdup((*(Json::Value*)_cfg_data)["pintool_dir"].asCString());
+                    scripts_path << root_dir << "\\PyScripts\\";
+                    scripts_dir = _strdup(scripts_path.str().c_str());
+
                     return true;
                 }
             }
@@ -56,10 +69,10 @@ namespace MazeWalker {
     bool CFG::PreloadLibraries() const {
         Json::Value& cfg_data = (*(Json::Value*)_cfg_data);
         for (unsigned i = 0; i < cfg_data["preload_libs32"].size(); i++) {
-            //log("Loading: " + cfg_data["preload_libs32"][i].asString() + "\n");
             HMODULE mod = LoadLibraryA(cfg_data["preload_libs32"][i].asCString());
             if (mod == NULL) {
-                //log("\t load failed\n");
+                Logger::Instance().Write("[%s] Library preload failed for %s\n", __FUNCTION__, 
+                                         cfg_data["preload_libs32"][i].asCString());
                 return false;
             }
         }
@@ -133,7 +146,7 @@ namespace MazeWalker {
     }
 
     const char* CFG::getScriptsDir() const {
-        return (*(Json::Value*)_cfg_data)["api_monitor"]["script_path"].asCString();
+        return scripts_dir;
     }
 
     const char* CFG::getOutputDir() const {
@@ -141,6 +154,14 @@ namespace MazeWalker {
     }
 
     const char* CFG::getRootDir() const {
-        return (*(Json::Value*)_cfg_data)["pin32_dir"].asCString();
+        return root_dir;
+    }
+
+    const char* CFG::getLogFilePath() const {
+        return log_file_path;
+    }
+
+    const char* CFG::getTraceLogFilePath() const {
+        return trace_log;
     }
 }

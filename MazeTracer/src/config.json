@@ -6,6 +6,30 @@
         "hash": "99760ef4e9760fe74c20aa23cc71b9b6"
       },
       {
+        "name": "SETUPAPI.dll",
+        "hash": "a0783990acefb0e1f9f464cfff3f4dce"
+      },
+      {
+        "name": "NETAPI32.dll",
+        "hash": "b22f9eaa5090d359b11eff5028d949db"
+      },
+      {
+        "name": "WINTRUST.dll",
+        "hash": "393d55d7b8180365866be3731323e3a2"
+      },
+      {
+        "name": "CRYPT32.dll",
+        "hash": "0bec09b6f032aa42c9f1a1b7cb2f1685"
+      },
+      {
+        "name": "MSASN1.dll",
+        "hash": "68a2d2990025c5a36d1d418596e62720"
+      },
+      {
+        "name": "IMAGEHLP.dll",
+        "hash": "6cad306c92e9f13dc56a33e7594f4d26"
+      },
+      {
         "name": "rsaenh.dll",
         "hash": "ef9e277ff69f132edd8075d8cd0ebe4e"
       },
@@ -116,6 +140,50 @@
       {
         "name": "wab32.dll",
         "hash": "f91af7ddd70e696f152c8ae0e0d61de2"
+      },
+      {
+        "name": "kernel32.dll",
+        "hash": "acf57332eed5cdcdbd0cad6f75b825b3"
+      },
+      {
+        "name": "ADVAPI32.dll",
+        "hash": "e19643483420e2509c6ccee6fc61d3dd"
+      },
+      {
+        "name": "RPCRT4.dll",
+        "hash": "974a62dc3fd4fd1527a5fa3132fb3223"
+      },
+      {
+        "name": "Secur32.dll",
+        "hash": "a5a21df7325eb3db52d5654c2baaf271"
+      },
+      {
+        "name": "GDI32.dll",
+        "hash": "b251ab41cc6db3bf1af4e4377573a183"
+      },
+      {
+        "name": "USER32.dll",
+        "hash": "b09cd7cb9ae5a48bd10d5b61d744b752"
+      },
+      {
+        "name": "msvcrt.dll",
+        "hash": "1838f96daab97a33395f5dee7b6f4a3c"
+      },
+      {
+        "name": "SHELL32.dll",
+        "hash": "1373aa353a43ac8359e8de77d06c77bb"
+      },
+      {
+        "name": "SHLWAPI.dll",
+        "hash": "3874baf26fd1a53b36c70fbf70c24eda"
+      },
+      {
+        "name": "comctl32.dll",
+        "hash": "3ebd0c3fd7b7bf2344a40f62b8895ee2"
+      },
+      {
+        "name": "comctl32.dll",
+        "hash": "563b3bae3c32f2e2fb7ff195414b636e"
       }
     ],
     "exphash": [
@@ -129,319 +197,347 @@
       }
     ],
     "path": [
-      "C:\\Windows\\"
+      "C:\\Windows\\",
+      "C:\\Program Files\\"
     ],
     "mods": [
       "mazewalker",
       "pinvm",
-      "wow64cpu",
-	  "pin"
+      "wow64cpu"
     ]
   },
-  "pin32_dir": "PROVIDE_FULL_PATH",
-  "pin64_dir": "PROVIDE_FULL_PATH",
-  "out_dir":   "PROVIDE_FULL_PATH",
-  "preload_libs32": ["python32.dll"],
+  "out_dir": "PROVIDE_FULL_PATH",
+  "pintool_dir": "PROVIDE_FULL_PATH",
+  "preload_libs32": [
+    "python27.dll"
+  ],
   "api_monitor": {
-    "script_path": "PROVIDE_FULL_PATH_TO_PySCRIPTS",
     "apis": [
       {
         "name": "SetupDiGetDeviceRegistryPropertyA",
-        "lib": "setupapi",
+        "lib": "setupapi.dll",
         "num": 7,
         "pre_parser": "",
         "post_parser": "post_antivm1"
       },
       {
+        "name": "NtQueryInformationProcess",
+        "lib": "ntdll.dll",
+        "num": 5,
+        "pre_parser": "",
+        "post_parser": "post_NtQueryInformationProcess"
+      },
+      {
         "name": "wsprintfA",
-        "lib": "user32",
+        "lib": "user32.dll",
         "num": 2,
         "pre_parser": "",
         "post_parser": "post_wsprintfa"
       },
       {
         "name": "sprintf",
-        "lib": "MSVCRT",
+        "lib": "MSVCRT.dll",
         "num": 2,
         "pre_parser": "",
         "post_parser": "post_wsprintfa"
       },
       {
+        "name": "CreateProcessA",
+        "lib": "kernel32.dll",
+        "num": 10,
+        "pre_parser": "",
+        "post_parser": "post_createprocessa"
+      },
+      {
+        "name": "CreateProcessW",
+        "lib": "kernel32.dll",
+        "num": 10,
+        "pre_parser": "",
+        "post_parser": "post_createprocessa"
+      },
+      {
         "name": "CreateFileW",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 7,
         "pre_parser": "pre_createfilew",
         "post_parser": ""
       },
       {
         "name": "CreateFileA",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 7,
         "pre_parser": "pre_createfilea",
         "post_parser": ""
       },
       {
         "name": "CreateDirectoryW",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_createdirectoryw",
         "post_parser": ""
       },
       {
         "name": "CreateDirectoryA",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_createdirectorya",
         "post_parser": ""
       },
       {
         "name": "ShellExecuteW",
-        "lib": "shell32",
+        "lib": "shell32.dll",
         "num": 6,
         "pre_parser": "pre_shellexecutew",
         "post_parser": ""
       },
       {
         "name": "NtWriteVirtualMemory",
-        "lib": "ntdll",
+        "lib": "ntdll.dll",
         "num": 5,
         "pre_parser": "pre_ntwritevirtualmemory",
         "post_parser": ""
       },
       {
         "name": "NtSetContextThread",
-        "lib": "ntdll",
+        "lib": "ntdll.dll",
         "num": 2,
         "pre_parser": "pre_ntsetthreadcontext",
         "post_parser": ""
       },
       {
         "name": "OpenProcess",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_openprocess",
         "post_parser": ""
       },
       {
         "name": "CreateThread",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 6,
         "pre_parser": "pre_createthread",
         "post_parser": ""
       },
       {
+        "name": "CreateRemoteThread",
+        "lib": "kernel32.dll",
+        "num": 7,
+        "pre_parser": "pre_createremotethread",
+        "post_parser": ""
+      },
+      {
         "name": "RegCreateKeyA",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 3,
         "pre_parser": "pre_regcreatekeya",
         "post_parser": ""
       },
       {
         "name": "RegCreateKeyW",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 3,
         "pre_parser": "pre_regcreatekeyw",
         "post_parser": ""
       },
       {
         "name": "RegOpenKeyA",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 3,
         "pre_parser": "pre_regopenkeya",
         "post_parser": ""
       },
       {
         "name": "RegOpenKeyExA",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 5,
-        "pre_parser": "",
-        "post_parser": "post_regopenkeyexa"
+        "pre_parser": "pre_regopenkeyexa",
+        "post_parser": ""
       },
       {
         "name": "RegOpenKeyW",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 3,
         "pre_parser": "pre_regopenkeyw",
         "post_parser": ""
       },
       {
         "name": "RegOpenKeyExW",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 5,
-        "pre_parser": "",
-        "post_parser": "post_regopenkeyexw"
+        "pre_parser": "pre_regopenkeyexw",
+        "post_parser": ""
       },
       {
         "name": "RegQueryValueExA",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 6,
         "pre_parser": "pre_regqueryvalueexa",
         "post_parser": ""
       },
       {
         "name": "RegQueryValueExW",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 6,
         "pre_parser": "pre_regqueryvalueexw",
         "post_parser": ""
       },
       {
         "name": "RegSetValueExA",
-        "lib": "advapi32",
+        "lib": "advapi32.dll",
         "num": 6,
         "pre_parser": "pre_regsetvaluea",
         "post_parser": ""
       },
       {
-      	"name": "CopyFileA",
-        "lib": "kernel32",
+        "name": "CopyFileA",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_copyfilea",
         "post_parser": ""
       },
       {
-      	"name": "CopyFileW",
-        "lib": "kernel32",
+        "name": "CopyFileW",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_copyfilew",
         "post_parser": ""
       },
       {
-      	"name": "MoveFileA",
-        "lib": "kernel32",
+        "name": "MoveFileA",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_movefilea",
         "post_parser": ""
       },
       {
-      	"name": "MoveFileW",
-        "lib": "kernel32",
+        "name": "MoveFileW",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_movefilew",
         "post_parser": ""
       },
       {
-      	"name": "CreateMutexA",
-        "lib": "kernel32",
+        "name": "CreateMutexA",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_createmutexa",
         "post_parser": ""
       },
       {
-      	"name": "CreateMutexW",
-        "lib": "kernel32",
+        "name": "CreateMutexW",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_createmutexw",
         "post_parser": ""
       },
       {
-      	"name": "DeleteFileA",
-        "lib": "kernel32",
+        "name": "DeleteFileA",
+        "lib": "kernel32.dll",
         "num": 1,
         "pre_parser": "pre_deletefilea",
         "post_parser": ""
       },
       {
-      	"name": "DeleteFileW",
-        "lib": "kernel32",
+        "name": "DeleteFileW",
+        "lib": "kernel32.dll",
         "num": 1,
         "pre_parser": "pre_deletefilew",
         "post_parser": ""
       },
       {
-      	"name": "FindWindowA",
-        "lib": "user32",
+        "name": "FindWindowA",
+        "lib": "user32.dll",
         "num": 2,
         "pre_parser": "pre_findwindowa",
         "post_parser": ""
       },
       {
-      	"name": "FindWindowW",
-        "lib": "user32",
+        "name": "FindWindowW",
+        "lib": "user32.dll",
         "num": 2,
         "pre_parser": "pre_findwindoww",
         "post_parser": ""
       },
       {
-      	"name": "GetFileSize",
-        "lib": "kernel32",
+        "name": "GetFileSize",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_getfilesize",
         "post_parser": ""
       },
       {
-      	"name": "OpenFileMappingA",
-        "lib": "kernel32",
+        "name": "OpenFileMappingA",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_openfilemappinga",
         "post_parser": ""
       },
       {
-      	"name": "OpenFileMappingW",
-        "lib": "kernel32",
+        "name": "OpenFileMappingW",
+        "lib": "kernel32.dll",
         "num": 3,
         "pre_parser": "pre_openfilemappingw",
         "post_parser": ""
       },
       {
-      	"name": "SetWindowTextA",
-        "lib": "user32",
+        "name": "SetWindowTextA",
+        "lib": "user32.dll",
         "num": 2,
         "pre_parser": "pre_setwindowtexta",
         "post_parser": ""
       },
       {
-      	"name": "SetWindowTextW",
-        "lib": "user32",
+        "name": "SetWindowTextW",
+        "lib": "user32.dll",
         "num": 2,
         "pre_parser": "pre_setwindowtextw",
         "post_parser": ""
       },
       {
         "name": "lstrcmpA",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_lstrcmpa",
         "post_parser": ""
       },
       {
         "name": "lstrcmpW",
-        "lib": "kernel32",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_lstrcmpw",
         "post_parser": ""
       },
       {
-      	"name": "_lopen",
-        "lib": "kernel32",
+        "name": "_lopen",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_lopen",
         "post_parser": ""
       },
       {
-      	"name": "_lcreat",
-        "lib": "kernel32",
+        "name": "_lcreat",
+        "lib": "kernel32.dll",
         "num": 2,
         "pre_parser": "pre_lcreate",
         "post_parser": ""
       },
       {
         "name": "HttpOpenRequestA",
-        "lib": "wininet",
+        "lib": "wininet.dll",
         "num": 8,
         "pre_parser": "pre_httpopenrequestsa",
         "post_parser": ""
       },
       {
         "name": "InternetConnectA",
-        "lib": "wininet",
+        "lib": "wininet.dll",
         "num": 8,
         "pre_parser": "pre_internetconnecta",
         "post_parser": ""
       },
       {
         "name": "InternetConnectW",
-        "lib": "wininet",
+        "lib": "wininet.dll",
         "num": 8,
         "pre_parser": "pre_internetconnectw",
         "post_parser": ""

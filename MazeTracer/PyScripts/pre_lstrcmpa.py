@@ -15,4 +15,3 @@ def pre_analyzer(LPCTSTR_lpString1,
         result = {'name': 'lpString2', 'data': lpString2.value}
         res.append(result)
         return json.dumps(res)
-    return None

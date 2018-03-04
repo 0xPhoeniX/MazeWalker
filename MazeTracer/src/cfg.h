@@ -55,6 +55,8 @@ namespace MazeWalker {
         const char* getScriptsDir() const;
         const char* getRootDir() const;
         const char* getOutputDir() const;
+        const char* getLogFilePath() const;
+        const char* getTraceLogFilePath() const;
 
         // Returns a description of API analysis configuration.
         const ApiHook* getHook(const char* lib, const char* api) const;
@@ -66,5 +68,9 @@ namespace MazeWalker {
 
         void* _cfg_data;
         void* _hook_data;
+        const char* log_file_path;
+        const char* trace_log;
+        char* root_dir;
+        char* scripts_dir;
     };
 }

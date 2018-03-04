@@ -2,6 +2,8 @@ import ctypes
 import json
 import os
 import subprocess
+import config
+
 
 def pre_analyzer(DWORD_dwDesiredAccess,
                  BOOL_bInheritHandle,
@@ -10,12 +12,13 @@ def pre_analyzer(DWORD_dwDesiredAccess,
 
     pid = ctypes.c_int.from_address(DWORD_dwProcessId)
     if (pid and pid.value and os.getpid() != pid.value):
-        if "pin_dir" in kwargs and "out_dir" in kwargs:
-            process = subprocess.Popen(kwargs["pin_dir"] +
-                                       "/pin.exe -unique_logfile -pid " + str(pid.value) +
-                                       " -t " + kwargs["pin_dir"] + "/MazeTracer.dll -cfg " +
-                                       kwargs["pin_dir"] + "/config.json" +
-                                       " -out " + kwargs["out_dir"] + " -unique_logfile")
+        if "pin_dir" in kwargs:
+            if pid.value not in config.cache['monitored_processes']:
+                process = subprocess.Popen(kwargs["pin_dir"] +
+                                           "/pin.exe -pid " + str(pid.value) +
+                                           " -t " + kwargs["pin_dir"] + "/MazeTracer.dll -cfg " +
+                                           kwargs["pin_dir"] + "/config.json -unique_logfile")
+                config.cache['monitored_processes'].append(pid.value)
         res = []
         result = {'name': 'dwProcessId', 'data': pid.value}
         res.append(result)
