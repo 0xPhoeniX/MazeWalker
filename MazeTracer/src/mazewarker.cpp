@@ -10,6 +10,7 @@
 #include "ProcessTrace.h"
 #include "ContextAnalyzer.h"
 #include "MemoryTracer.h"
+#include "Logger.h"
 
 
 using namespace MazeWalker;
@@ -27,20 +28,19 @@ INT32 Usage()
     return -1;
 }
 
-EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInfo, PHYSICAL_CONTEXT *pPhysCtxt, VOID *v)
-{
-    char buf[1024];
-
+EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInfo, PHYSICAL_CONTEXT *pPhysCtxt, VOID *v) {
     EXCEPTION_CODE c = PIN_GetExceptionCode(pExceptInfo);
     EXCEPTION_CLASS cl = PIN_GetExceptionClass(c);
-    LOG("\n\n\n[" + string(__FUNCTION__) + "]\n >>>>>>>>>>> Exception <<<<<<<<<<<\n");
-    LOG(PIN_ExceptionToString(pExceptInfo));
-    
-    memset(buf, 0, sizeof(buf));
-    sprintf_s(buf, sizeof(buf) - 1, 
-        "\tException code=0x%x address=0x%x tid=%d\n"
-        "\t\teax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x "
-        "eip=%08x esp=%08x ebp=%08x\n",
+   
+    Logger::Instance().Write(
+        ">>>>>>>>>>> Exception <<<<<<<<<<<\n \
+        %s \n \
+        \tException code=0x%x address=0x%x tid=%d\n \
+        \t\teax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x \
+        eip=%08x esp=%08x ebp=%08x\n \
+        ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n\n \
+        \tCallstack:\n\t\tFramePtr ChildEBP RetAddr\n",
+        PIN_ExceptionToString(pExceptInfo).c_str(),
         pExceptInfo->GetExceptCode(), 
         PIN_GetPhysicalContextReg(pPhysCtxt, REG_EIP), PIN_ThreadId(),
         PIN_GetPhysicalContextReg(pPhysCtxt, REG_EAX),
@@ -52,22 +52,14 @@ EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInf
         PIN_GetPhysicalContextReg(pPhysCtxt, REG_EIP), 
         PIN_GetPhysicalContextReg(pPhysCtxt, REG_ESP), 
         PIN_GetPhysicalContextReg(pPhysCtxt, REG_EBP));
-    LOG(string(buf));
-    LOG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\n\n");
 
     // log callstack    
     ADDRINT eip = PIN_GetPhysicalContextReg(pPhysCtxt, REG_EIP);
     ADDRINT esp = PIN_GetPhysicalContextReg(pPhysCtxt, REG_ESP);
     ADDRINT ebp = PIN_GetPhysicalContextReg(pPhysCtxt, REG_EBP);
     ADDRINT childebp = 0;
-    memset(buf, 0, sizeof(buf));
-    sprintf_s(buf, sizeof(buf) - 1, 
-        "\tCallstack:\n"
-        "\t\tFramePtr ChildEBP RetAddr\n");
-    LOG(buf);
 
     int count = 0;
-    memset(buf, 0, sizeof(buf));
     while(ebp != 0 && count < 20)
     {
         if(PIN_SafeCopy(&childebp, (ADDRINT *)(ebp), 4) != 4) 
@@ -75,9 +67,7 @@ EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInf
         if(PIN_SafeCopy(&eip, (ADDRINT *)(ebp + 4), 4) != 4) 
             break;      
 
-        sprintf_s(buf, sizeof(buf) -1, "\t\t%08x %08x %08x\n", 
-            ebp, childebp, eip);
-        LOG(buf);
+        Logger::Instance().Write("\t\t%08x %08x %08x\n", ebp, childebp, eip);
 
         if(PIN_SafeCopy(&ebp, (ADDRINT *)ebp, 4) != 4) 
             break;
@@ -98,12 +88,11 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
         ADDRINT ebp = PIN_GetContextReg(from, REG_EBP);
         ADDRINT childebp = 0;
     
-        char buf[1024];
-        memset(buf, 0, sizeof(buf));
-        sprintf_s(buf, sizeof(buf) - 1, 
-            "\tException code=0x%x address=0x%x tid=%d\n"
-            "\t\teax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x "
-            "eip=%08x esp=%08x ebp=%08x\n",
+        Logger::Instance().Write(
+            "\tException code=0x%x address=0x%x tid=%d\n \
+            \t\teax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x \
+            eip=%08x esp=%08x ebp=%08x\n \
+            \tCallstack:\n\t\tFramePtr ChildEBP RetAddr\n",
             info, eip, tid,
             PIN_GetContextReg(from, REG_EAX),
             PIN_GetContextReg(from, REG_EBX),
@@ -112,17 +101,8 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
             PIN_GetContextReg(from, REG_ESI),
             PIN_GetContextReg(from, REG_EDI),
             eip, esp, ebp);
-        LOG("[" + string(__FUNCTION__) + "]\n" + string(buf));
-
-        // log callstack        
-        memset(buf, 0, sizeof(buf));
-        sprintf_s(buf, sizeof(buf) - 1, 
-            "\tCallstack:\n"
-            "\t\tFramePtr ChildEBP RetAddr\n");
-        LOG(buf);
 
         int count = 0;
-        memset(buf, 0, sizeof(buf));
         while(ebp != 0 && count < 20)
         {
             if(PIN_SafeCopy(&childebp, (ADDRINT *)(ebp), 4) != 4) 
@@ -130,9 +110,7 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
             if(PIN_SafeCopy(&eip, (ADDRINT *)(ebp + 4), 4) != 4) 
                 break;      
 
-            sprintf_s(buf, sizeof(buf) -1, "\t\t%08x %08x %08x\n", 
-                ebp, childebp, eip);
-            LOG(buf);
+            Logger::Instance().Write("\t\t%08x %08x %08x\n", ebp, childebp, eip);
 
             if(PIN_SafeCopy(&ebp, (ADDRINT *)ebp, 4) != 4) 
                 break;
@@ -158,7 +136,7 @@ void AddCallee(ADDRINT ins_addr, ADDRINT exec_target, ADDRINT regBased, THREADID
         }
     }
     else {
-        LOG(string(__FUNCTION__) + ": [!!!]No record for the thread: "+ decstr(tid) + "\n");
+        Logger::Instance().Write("[%s] No record for the thread: %d\n", __FUNCTION__, tid);
     }
 }
 
@@ -199,7 +177,7 @@ VOID Trace(TRACE trace, VOID *v)
 
         if (ProcessTrace::Instance().isAddressInScope(TRACE_Address(trace)))
         {
-            LOG(string(__FUNCTION__) + ": checking ["+ hexstr(TRACE_Address(trace)) + "]\n");
+            Logger::Instance().Write("[%s] Tracing address: 0x%x\n", __FUNCTION__, TRACE_Address(trace));
 
             for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
             {
@@ -384,14 +362,12 @@ void save_maze_log()
     Json::StyledWriter writer;
     Json::Value root;
     std::ofstream json_out;
-    std::ostringstream json_fname;
 
     ProcessTrace::Instance().Export(CFG::Instance().getOutputDir());
     ProcessTrace::Instance().toJson(root);
 
     if (!root.empty()) {
-        json_fname << CFG::Instance().getOutputDir() << "\\maze_walk_" << PIN_GetPid() << ".json";
-        json_out.open(json_fname.str());
+        json_out.open(CFG::Instance().getTraceLogFilePath());
         json_out << writer.write(root);
         json_out.close();
     }
@@ -422,7 +398,7 @@ VOID Fini(INT32 code, VOID *v)
 }
 
 VOID OutOfMemoryCallback(size_t size, VOID* v) {
-    LOG(string(__FUNCTION__) + ": Out of memory.\n");
+    Logger::Instance().Write("[%s] Out of memory.\n", __FUNCTION__);
     save_maze_log();
 }
 
@@ -458,7 +434,7 @@ int main(int argc, char *argv[])
         PIN_StartProgram();
     }
 
-    LOG("[!!!] Please check configuration.");
+    Logger::Instance().Write("[!!!] Please check configuration.\n");
 
     return 0;
 }

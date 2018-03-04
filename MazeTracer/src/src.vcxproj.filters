@@ -78,6 +78,9 @@
     <ClCompile Include="ContextAnalyzer.cpp">
       <Filter>Source Files\Analysis</Filter>
     </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crypto.h">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="PythonTypesInternal.h">
       <Filter>Header Files\Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

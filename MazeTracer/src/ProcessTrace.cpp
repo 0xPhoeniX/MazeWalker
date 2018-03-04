@@ -5,6 +5,7 @@
 #include <vector>
 #include "pin.H"
 #include "cfg.h"
+#include "Logger.h"
 
 
 namespace MazeWalker {
@@ -42,6 +43,7 @@ namespace MazeWalker {
         std::map<int, MemoryArea*>::iterator it = mas.find(ma->Base());
 
         if (it == mas.end()) {
+            Logger::Instance().Write("[%s] Adding memory region: 0x%x\n", __FUNCTION__, ma->Base());
             mas[ma->Base()] = ma;
         }
     }
@@ -60,7 +62,7 @@ namespace MazeWalker {
                 }
         }
 
-        LOG("[" + string(__FUNCTION__) + "] Adding image: " + (img->Path() ? img->Path() : "") + " - " + (img->Name()?img->Name():"") + " - " + (img->ImpHash()?img->ImpHash(): "") + " " + hexstr(img->Base()) + "\n");
+        Logger::Instance().Write("[%s] Adding image: %s, %s, 0x%x\n", __FUNCTION__, img->Path(), img->ImpHash(), img->Base());
 
         head = new MOD_INFO;
         if (head) {
@@ -71,7 +73,7 @@ namespace MazeWalker {
                 CFG::Instance().isModuleWhitelisted(img->Name()) ||
                 CFG::Instance().isHashWhitelisted(img->ImpHash()) || 
                 CFG::Instance().isHashWhitelisted(img->ExpHash())) {
-                    LOG("[" + string(__FUNCTION__) + "] \t Image was whitelisted.\n");
+                    Logger::Instance().Write("[%s] \t Image was whitelisted.\n", __FUNCTION__);
                     head->doTrace = false;
             }
 

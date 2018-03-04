@@ -8,6 +8,7 @@
 #include <set>
 #include <ostream>
 #include <vector>
+#include "Logger.h"
 
 
 #define THREAD_LIMIT 100
@@ -32,7 +33,6 @@ namespace MazeWalker {
             threads.reserve(THREAD_LIMIT);
             for (int i = 0; i < THREAD_LIMIT; i++) { threads[i] = 0; }
             _id = State::_idGenerator++;
-            // LOG(string(__FUNCTION__) + ": Adding State: "+ hexstr(base) + " with id " + decstr(_id) + "\n");
         }
 
         ~State() {
@@ -73,7 +73,7 @@ namespace MazeWalker {
                 for (int i = 0; i < THREAD_LIMIT; i++) { l->threads[i] = 0; }
                 l->entry = entry;
                 l->id = MemoryArea::_idGenerator++;
-                // LOG(string(__FUNCTION__) + ": Adding ma: "+ hexstr(base) + " with id " + decstr(l->id) + "\n");
+                Logger::Instance().Write("[%s] Adding memory region: 0x%x, id = %d\n", __FUNCTION__, base, l->id);
                 memcpy(l->data, (char*)base, size);
                 ((std::list<PLAYER>*)(_states))->push_back(l);
                 return;
@@ -179,7 +179,6 @@ namespace MazeWalker {
     Thread* MemoryArea::getThread(int id) const {
         if (id < THREAD_LIMIT) {
             std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
-            //LOG(string(__FUNCTION__) + ": get record for thread: "+ decstr(id) + " at ma " + decstr((*iter)->id) + "\n");
             return (*iter)->threads[id];
         }
 
@@ -191,7 +190,7 @@ namespace MazeWalker {
             std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
             if ((*iter)->threads[thread->ID()] == 0) {
                 (*iter)->threads[thread->ID()] = thread;
-                // LOG(string(__FUNCTION__) + ": Adding record for thread: "+ decstr(thread->ID()) + " at ma " + decstr((*iter)->id) + "\n");
+                Logger::Instance().Write("[%s] Adding record for memory region with ID %d, TID = %d\n", __FUNCTION__, (*iter)->id, thread->ID());
             }
         }
     }

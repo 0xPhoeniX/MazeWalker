@@ -134,6 +134,15 @@
       <AdditionalOptions>/EXPORT:main %(AdditionalOptions)</AdditionalOptions>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Build\MazeTracer\$(SolutionName)*" /Y
+xcopy "$(SolutionDir)src\config.json" "$(SolutionDir)Build\MazeTracer\config.json*" /Y
+xcopy "$(SolutionDir)Pin\ia32\bin\dbghelp.dll" "$(SolutionDir)Build\MazeTracer\*" /Y
+xcopy "$(SolutionDir)Pin\ia32\bin\pinvm.dll" "$(SolutionDir)Build\MazeTracer\*" /Y
+xcopy "$(SolutionDir)Pin\ia32\bin\pin.exe" "$(SolutionDir)Build\MazeTracer\*" /Y
+xcopy "$(SolutionDir)PyScripts" "$(SolutionDir)Build\MazeTracer\PyScripts" /Y /I
+$(SolutionDir)Build\7za.exe a  "$(SolutionDir)Build\MazeTracer.zip"  "$(SolutionDir)Build\MazeTracer"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -169,6 +178,7 @@
     <ClCompile Include="ContextAnalyzer.cpp" />
     <ClCompile Include="crypto.cpp" />
     <ClCompile Include="jsoncpp.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="mazewarker.cpp" />
     <ClCompile Include="MemoryArea.cpp" />
     <ClCompile Include="MemoryTracer.cpp" />
@@ -189,6 +199,7 @@
     <ClInclude Include="IMemoryAreaMaker.h" />
     <ClInclude Include="IAddress.h" />
     <ClInclude Include="IReportObject.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryArea.h" />
     <ClInclude Include="MemoryAreaMaker.h" />
     <ClInclude Include="MemoryTracer.h" />

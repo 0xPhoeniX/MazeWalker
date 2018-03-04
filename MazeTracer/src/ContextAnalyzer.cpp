@@ -1,6 +1,7 @@
 #include "PythonTypesInternal.h"
 #include "ContextAnalyzer.h"
 #include "cfg.h"
+#include "Logger.h"
 
 
 namespace MazeWalker {
@@ -39,7 +40,7 @@ namespace MazeWalker {
                                       long* params) {
         PyObject *pName, *pModule, *pDict, *pFunc, *pValue = 0, *pPosArgs;
         PyObject *pKywdArgs, *pResult, *pResultRepr, *ptype, *ptraceback = 0;
-        PyObject *pOutDir, *pPinDir;
+        PyObject *pPinDir;
 
         char* err = NULL, *stack = NULL;
         json_result = NULL;
@@ -98,11 +99,15 @@ namespace MazeWalker {
             pPyErr_Fetch(&ptype, &pValue, &ptraceback);
             if (pValue != NULL) {
                 PyObject* pRepr = pPyObject_Repr(pValue);
+                const char *err = pPyString_AsString(pRepr);
+                Logger::Instance().Write("[%s] %s\n", __FUNCTION__, err);
                 pPy_DecRef(pRepr);
+                pPy_DecRef(pValue);
             }
             if (ptraceback != NULL) {
                 PyObject* pRepr = pPyObject_Repr(ptraceback);
                 pPy_DecRef(pRepr);
+                pPy_DecRef(ptraceback);
             }
     exit:
             pPy_DecRef(pModule);
