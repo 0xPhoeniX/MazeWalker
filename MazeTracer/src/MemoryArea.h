@@ -3,9 +3,6 @@
 #include "Thread.h"
 
 
-//#define REGISTER_MATYPE(T) static MazeWalker::MemoryAreaMaker<T> maker;
-//#define REGISTER_DEFAULTMATYPE(T) static MazeWalker::DefaultMemoryAreaMaker<T> maker()
-
 namespace MazeWalker {
 
     enum MemoryAreaStatus {
@@ -24,7 +21,7 @@ namespace MazeWalker {
         // entry: address of the first instruction to be executed.
         // base:  the base address for the memory area
         // size:  the size of the allocated memory chunk
-        MemoryArea(int entry, int base, size_t size);
+        MemoryArea(int entry);
         virtual ~MemoryArea();
 
         // Save the contents of the memory area to a file. All states 
@@ -43,7 +40,7 @@ namespace MazeWalker {
         // 
         // address: starting address of the patch to check
         // size:    the size of the patch
-        MemoryAreaStatus StatusAt(int address, int size) const;
+        MemoryAreaStatus StatusAt(int address, size_t size) const;
 
         // Save current, existing, in-memory data The saved state will
         // become the new default state.
@@ -56,7 +53,7 @@ namespace MazeWalker {
         int Base() const { return _base; }
 
         // Save object description to a json object.
-        virtual bool toJson( Json::Value& root ) const;
+        virtual bool toJson( void* root ) const;
 
     protected:
         // The method is internally called before any dump of the state 
@@ -75,8 +72,8 @@ namespace MazeWalker {
         const char* getLatestState(size_t& size) const;
 
         void* _states;
+        void* _regions;
         int _base;
         size_t _size;
-        static int _idGenerator;
     };
 }

@@ -2,6 +2,8 @@
 #include <set>
 #include <map>
 #include <list>
+#include "cJSON.h"
+#include "Logger.h"
 
 
 namespace MazeWalker {
@@ -48,29 +50,27 @@ namespace MazeWalker {
         return (*(std::map<int, Call*>*)_call_lut)[target];
     }
 
-    bool Thread::toJson( Json::Value& root ) const {
+    bool Thread::toJson( void* root ) const {
 
         if (((std::list<Call*>*)_calls)->size() > 0 ||
             ((std::list<BasicBlock*>*)_bbls)->size() > 0) {
-            root["tid"] = _id;
-            root["tfunc"] = _entry;
-            root["bbls"] = Json::Value(Json::arrayValue);
-            root["calls"] = Json::Value(Json::arrayValue);
+            cJSON_AddNumberToObject((cJSON*)root, "tid", _id);
+            cJSON_AddNumberToObject((cJSON*)root, "tfunc", _entry);
+            cJSON* bbls = cJSON_AddArrayToObject((cJSON*)root, "bbls");
+            cJSON* calls = cJSON_AddArrayToObject((cJSON*)root, "calls");
 
             for (std::list<Call*>::iterator it = ((std::list<Call*>*)_calls)->begin();
                 it != ((std::list<Call*>*)_calls)->end(); ++it) {
-                    Json::Value json_call;
-                    (*it)->toJson(json_call);
-                    if (!json_call.empty())
-                        root["calls"].append(json_call);
+                    cJSON* json_call = cJSON_CreateObject();
+                    if ((*it)->toJson(json_call))
+                        cJSON_AddItemToArray(calls, json_call);
             }
 
             for (std::list<BasicBlock*>::iterator it = ((std::list<BasicBlock*>*)_bbls)->begin();
                 it != ((std::list<BasicBlock*>*)_bbls)->end(); ++it) {
-                    Json::Value json_bbl;
-                    (*it)->toJson(json_bbl);
-                    if (!json_bbl.empty())
-                        root["bbls"].append(json_bbl);
+                    cJSON* json_bbl = cJSON_CreateObject();
+                    if ((*it)->toJson(json_bbl))
+                        cJSON_AddItemToArray(bbls, json_bbl);
             }
         }
 

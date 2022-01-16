@@ -1,12 +1,14 @@
 #include "MemoryArea.h"
-#include "WinAddress.h"
+#include "Windows.h"
 #include "cfg.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <cstdlib>
 #include <string>
 #include <sstream>
 #include <list>
 #include <set>
-#include <ostream>
+#include "cJSON.h"
 #include <vector>
 #include "Logger.h"
 
@@ -14,6 +16,9 @@
 #define THREAD_LIMIT 100
 
 namespace MazeWalker {
+
+    int _idGenerator = 0;
+    int _sidGenerator = 0;
 
     typedef struct _layer {
         char* data;
@@ -23,64 +28,38 @@ namespace MazeWalker {
         std::vector<Thread*> threads;
     } LAYER, *PLAYER;
 
-    class State {
-    public:
-        State(int base, size_t size, int entry) : _entry(entry), _size(size) {
-            _data = new char[_size];
-            if (_data) {
-                memcpy(_data, (char*)base, _size);
-            }
-            threads.reserve(THREAD_LIMIT);
-            for (int i = 0; i < THREAD_LIMIT; i++) { threads[i] = 0; }
-            _id = State::_idGenerator++;
-        }
-
-        ~State() {
-            if (_data) {
-                delete [] _data;
-                _data = 0;
-            }
-
-            for (int i = 0; i < THREAD_LIMIT; i++) { threads[i] = 0; }
-            _size = _entry = _id = 0;
-        }
-
-        char* _data;
-        size_t _size;
-        int _entry;
-        int _id;
-        std::vector<Thread*> threads;
-        static int _idGenerator;
-    };
-
-    int MemoryArea::_idGenerator = 0;
-
-    MemoryArea::MemoryArea(int entry, int base, size_t size) {
-        _base = _size = 0;
-        _states = NULL;
-        PLAYER l = NULL;
-
-        if (base == 0 || size == 0)
-            return;
+    MemoryArea::MemoryArea(int entry) {
         _states = new std::list<PLAYER>;
-        l = new LAYER;
-        if (l && _states) {
-            l->data = new char[size];
-            if (l->data) {
-                _base = base;
-                l->size = _size = size;
+        MEMORY_BASIC_INFORMATION curr_info;
+        PLAYER l;
+        int currAddr = 0;
+        _base = _size = 0;
+
+        if (VirtualQuery((PVOID)(entry), &curr_info, sizeof(MEMORY_BASIC_INFORMATION))) {
+            currAddr = _base = (int)curr_info.AllocationBase;
+            l = new LAYER;
+            if (l) {
                 l->threads.reserve(THREAD_LIMIT);
                 for (int i = 0; i < THREAD_LIMIT; i++) { l->threads[i] = 0; }
+                l->id = _idGenerator++;
                 l->entry = entry;
-                l->id = MemoryArea::_idGenerator++;
-                Logger::Instance().Write("[%s] Adding memory region: 0x%x, id = %d\n", __FUNCTION__, base, l->id);
-                memcpy(l->data, (char*)base, size);
+                l->data = NULL;
+                l->size = 0;
+
+                while (VirtualQuery((PVOID)currAddr, &curr_info, sizeof(MEMORY_BASIC_INFORMATION)) && (int)curr_info.AllocationBase == _base) {
+                    l->size += curr_info.RegionSize;
+                    l->data = (char*)realloc(l->data, l->size);
+                    if (curr_info.State == MEM_COMMIT) {
+                        memcpy(l->data + ((int)curr_info.BaseAddress - _base), (void*)curr_info.BaseAddress, curr_info.RegionSize);
+                    }
+                    currAddr = (int)curr_info.BaseAddress + curr_info.RegionSize;
+                }
                 ((std::list<PLAYER>*)(_states))->push_back(l);
-                return;
+                _size = l->size;
             }
         }
-        delete _states;
-        delete l;
+
+        Logger::Write("%s - base=0x%x, entry=0x%x\n", __FUNCTION__, _base, entry);
     }
 
     MemoryArea::~MemoryArea() {
@@ -88,12 +67,9 @@ namespace MazeWalker {
 
         if (_states) {
             for (iter = ((std::list<PLAYER>*)(_states))->begin();
-                 iter != ((std::list<PLAYER>*)(_states))->end(); iter++) {
-                     delete [] (*iter)->data;
-                     (*iter)->data = 0;
-                     (*iter)->size = 0;
-                     delete *iter;
-                     *iter = 0;
+                iter != ((std::list<PLAYER>*)(_states))->end(); iter++) {
+                free((*iter)->data);
+                (*iter)->data = NULL;
             }
             ((std::list<PLAYER>*)(_states))->clear();
             delete _states;
@@ -102,52 +78,60 @@ namespace MazeWalker {
     }
 
     bool MemoryArea::saveState(int entry) {
+        Logger::Write("%s - entry=0x%x\n", __FUNCTION__, entry);
         PLAYER l;
-        IAddress& addr = WinAddress(entry, true);
+        MEMORY_BASIC_INFORMATION curr_info;
+        int currAddr = 0;
 
-        if (_size > 0 && _base > 0 && _states) {
-            if (addr.Base() == _base) {
-                l = new LAYER;
-                if (l) {
-                    l->data = new char[addr.Size()];
-                    if (l->data) {
-                        l->size = addr.Size();
-                        l->entry = entry;
-                        l->threads.reserve(THREAD_LIMIT);
-                        for (int i = 0; i < THREAD_LIMIT; i++) { l->threads[i] = 0; }
-                        l->id = MemoryArea::_idGenerator++;
-                        memcpy(l->data, (void*)addr.Base(), addr.Size());
-                        ((std::list<PLAYER>*)(_states))->push_back(l);
-                        return true;
+        if (VirtualQuery((PVOID)(entry), &curr_info, sizeof(MEMORY_BASIC_INFORMATION))) {
+            if (_base != (int)curr_info.AllocationBase) {
+                Logger::Write("Wrong memory area: _base = 0x%x, found = 0x%x\n", _base, (int)curr_info.AllocationBase);
+                return false;
+            }
+            currAddr = (int)curr_info.AllocationBase;
+            l = new LAYER;
+            if (l) {
+                l->threads.reserve(THREAD_LIMIT);
+                for (int i = 0; i < THREAD_LIMIT; i++) { l->threads[i] = 0; }
+                l->id = _idGenerator++;
+                l->entry = entry;
+                l->size = 0;
+                l->data = NULL;
+
+                while (VirtualQuery((PVOID)currAddr, &curr_info, sizeof(MEMORY_BASIC_INFORMATION)) && (int)curr_info.AllocationBase == _base) {
+                    l->size += curr_info.RegionSize;
+                    l->data = (char*)realloc(l->data, l->size);
+                    if (curr_info.State == MEM_COMMIT) {
+                        memcpy(l->data + ((int)curr_info.BaseAddress - _base), (void*)curr_info.BaseAddress, curr_info.RegionSize);
                     }
-                    delete l;
-                    l = 0;
+                    currAddr = (int)curr_info.BaseAddress + curr_info.RegionSize;
                 }
+                ((std::list<PLAYER>*)(_states))->push_back(l);
+                _size = l->size;
+                return true;
             }
         }
-
         return false;
     }
 
-    MemoryAreaStatus MemoryArea::StatusAt(int address, int size) const {
+    MemoryAreaStatus MemoryArea::StatusAt(int address, size_t size) const {
         int offset;
         std::list<PLAYER>::const_reverse_iterator iter;
-        IAddress& addr = WinAddress(address);
+        MEMORY_BASIC_INFORMATION curr_info;
 
-
-        if (addr.Base() == _base) {
-            if ((address + size) <= (addr.Base() + addr.Size())) {
-                offset = address - _base;
-                iter = ((std::list<PLAYER>*)(_states))->rbegin();
-                if (iter != ((std::list<PLAYER>*)(_states))->rend()) {
-                    if ((address + size) <= (_base + (*iter)->size)) {
-                        if (memcmp((char*)((*iter)->data) + offset, (void*)address, size) != 0) {
-                            return Different;
-                        }
-                        else {
-                            return Equal;
-                        }
-                    }
+        if (VirtualQuery((PVOID)(address), &curr_info, sizeof(MEMORY_BASIC_INFORMATION))) {
+            if (_base != (int)curr_info.AllocationBase) {
+                Logger::Write("Wrong memory area: _base = 0x%x, found = 0x%x\n", _base, (int)curr_info.AllocationBase);
+                return Error;
+            }
+            iter = ((std::list<PLAYER>*)(_states))->rbegin();
+            if (iter != ((std::list<PLAYER>*)(_states))->rend()) {
+                if (address > _base && address < ((*iter)->size + _base)) {
+                    offset = address - _base;
+                    if (memcmp((void*)((*iter)->data + offset), (void*)address, size) != 0)
+                        return Different;
+                    else
+                        return Equal;
                 }
             }
         }
@@ -160,7 +144,7 @@ namespace MazeWalker {
         std::list<PLAYER>::const_iterator iter;
         FILE* dump;
 
-        if (path_prefix && strlen(path_prefix) > 0) {
+        if (_states && path_prefix && strlen(path_prefix) > 0) {
             for (iter = ((std::list<PLAYER>*)(_states))->begin();
                  iter != ((std::list<PLAYER>*)(_states))->end(); iter++) {
                      std::ostringstream fpath;
@@ -169,7 +153,7 @@ namespace MazeWalker {
 
                      dump = NULL;
                      processBeforeDump((*iter)->data, (*iter)->size);
-                     fopen_s(&dump, fpath.str().c_str(), "wb");
+                     dump = fopen(fpath.str().c_str(), "wb");
                      fwrite((*iter)->data, sizeof(char), (*iter)->size, dump);
                      fclose(dump);
             }
@@ -177,6 +161,9 @@ namespace MazeWalker {
     }
 
     Thread* MemoryArea::getThread(int id) const {
+        if (_states == NULL) {
+            Logger::Write("\tStates are still NULL!!!\n");
+        }
         if (id < THREAD_LIMIT) {
             std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
             return (*iter)->threads[id];
@@ -190,42 +177,51 @@ namespace MazeWalker {
             std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
             if ((*iter)->threads[thread->ID()] == 0) {
                 (*iter)->threads[thread->ID()] = thread;
-                Logger::Instance().Write("[%s] Adding record for memory region with ID %d, TID = %d\n", __FUNCTION__, (*iter)->id, thread->ID());
+                Logger::Write("[%s] Adding record for memory region with Base=0x%x, TID=%d\n", __FUNCTION__, Base(), thread->ID());
             }
         }
     }
 
     const char* MemoryArea::getLatestState(size_t& size) const {
-        std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
+        if (_states) {
+            std::list<PLAYER>::const_reverse_iterator iter = ((std::list<PLAYER>*)(_states))->rbegin();
+            size = (*iter)->size;
+            return (*iter)->data;
+        }
 
-        size = (*iter)->size;
-        return (*iter)->data;
+        size = 0;
+        return NULL;
     }
 
-    bool MemoryArea::toJson( Json::Value& root ) const {
+    bool MemoryArea::toJson( void* root ) const {
+        Logger::Write("%s\n", __FUNCTION__);
         std::list<PLAYER>::const_iterator iter;
+
+        if (_states == NULL) {
+            Logger::Write("No states to save!\n");
+            return true;
+        }
 
         for (iter = ((std::list<PLAYER>*)(_states))->begin();
              iter != ((std::list<PLAYER>*)(_states))->end(); iter++) {
-                 Json::Value json_ma;
+                 cJSON* json_ma = cJSON_CreateObject();
                  
-                 json_ma["id"] = (*iter)->id;
-                 json_ma["start"] = _base;
-                 json_ma["end"] = (*iter)->size + _base;
-                 json_ma["entry"] = (*iter)->entry;
-                 json_ma["size"] = (*iter)->size;
-                 json_ma["threads"] = Json::Value(Json::arrayValue);
+                 cJSON_AddNumberToObject( json_ma, "id", (*iter)->id);
+                 cJSON_AddNumberToObject(json_ma, "start", _base);
+                 cJSON_AddNumberToObject(json_ma, "end", (*iter)->size + _base);
+                 cJSON_AddNumberToObject(json_ma, "entry", (*iter)->entry);
+                 cJSON_AddNumberToObject(json_ma, "size", (*iter)->size);
+                 cJSON* threads = cJSON_AddArrayToObject(json_ma, "threads");
 
                  for (int i = 0; i < THREAD_LIMIT; i++) {
                     if ((*iter)->threads[i] != 0) {
-                        Json::Value thread;
-                        (*iter)->threads[i]->toJson(thread);
-                        if (!thread.empty())
-                            json_ma["threads"].append(thread);
+                        cJSON* thread = cJSON_CreateObject();
+                        if ((*iter)->threads[i]->toJson(thread))
+                            cJSON_AddItemToArray(threads, thread);
                     }
                  }
 
-                 root.append(json_ma);
+                 cJSON_AddItemToArray((cJSON*)root, json_ma);
         }
 
         return true;

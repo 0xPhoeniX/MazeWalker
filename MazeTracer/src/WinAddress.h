@@ -7,7 +7,7 @@ namespace MazeWalker {
 
     class WinAddress : public IAddress {
     public:
-        WinAddress(int address, bool noCache = false);
+        WinAddress(int address);
         WinAddress(const WinAddress& other);
         WinAddress& operator=(const WinAddress& other);
 
@@ -17,12 +17,6 @@ namespace MazeWalker {
 
         virtual ~WinAddress() {}
     private:
-        WinAddress(int addr, int base, int size);
         int _addr, _base, _size;
-
-        // Internal cache of already resolved addresses 
-        // for performance optimization.
-        static void getFromCache(WinAddress* obj);
-        static bool Resolve(WinAddress* obj);
     };
 }

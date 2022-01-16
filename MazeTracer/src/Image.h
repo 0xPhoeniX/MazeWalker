@@ -7,7 +7,7 @@ namespace MazeWalker {
     // The abstract class for arbitrary in-memory loaded image.
     class Image : public MemoryArea {
     public:
-        Image(int entry, int base, size_t size) : MemoryArea(entry, base, size) {}
+        Image(int entry) : MemoryArea(entry) {}
         virtual ~Image() {}
 
         // Resolve address into a symbol if present in Image.

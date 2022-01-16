@@ -1,17 +1,16 @@
 #include "pin.H"
 #include "cfg.h"
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <algorithm>
-#include <list>
-#include <string>
-#include <iomanip>
 #include "ProcessTrace.h"
-#include "ContextAnalyzer.h"
-#include "MemoryTracer.h"
+#include "PEImage.h"
 #include "Logger.h"
+#include <iostream>
+#include <fstream>
+#include "cJSON.h"
 
+
+using std::cerr;
+using std::endl;
+using std::string;
 
 using namespace MazeWalker;
 
@@ -19,6 +18,8 @@ KNOB<string> KnobConfigFile(KNOB_MODE_WRITEONCE,  "pintool",
     "cfg", "", "specify configuration file path");
 KNOB<int> KnobDelay(KNOB_MODE_WRITEONCE,  "pintool",
     "delay", "300000", "specify time for termination delay in millisecs");
+
+ProcessTrace *pTrace = NULL;
 
 INT32 Usage()
 {
@@ -32,7 +33,9 @@ EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInf
     EXCEPTION_CODE c = PIN_GetExceptionCode(pExceptInfo);
     EXCEPTION_CLASS cl = PIN_GetExceptionClass(c);
    
-    Logger::Instance().Write(
+    Logger::Write("Where %s\n", pExceptInfo->GetCodeAsString().c_str());
+
+    Logger::Write(
         ">>>>>>>>>>> Exception <<<<<<<<<<<\n \
         %s \n \
         \tException code=0x%x address=0x%x tid=%d\n \
@@ -67,7 +70,7 @@ EXCEPT_HANDLING_RESULT ExceptionHandler(THREADID tid, EXCEPTION_INFO *pExceptInf
         if(PIN_SafeCopy(&eip, (ADDRINT *)(ebp + 4), 4) != 4) 
             break;      
 
-        Logger::Instance().Write("\t\t%08x %08x %08x\n", ebp, childebp, eip);
+        Logger::Write("\t\t ebp = 0x%x childebp = 0x%x eip = 0x%x\n", ebp, childebp, eip);
 
         if(PIN_SafeCopy(&ebp, (ADDRINT *)ebp, 4) != 4) 
             break;
@@ -87,8 +90,10 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
         ADDRINT esp = PIN_GetContextReg(from, REG_ESP);
         ADDRINT ebp = PIN_GetContextReg(from, REG_EBP);
         ADDRINT childebp = 0;
-    
-        Logger::Instance().Write(
+
+        Logger::Write("Where %s\n", RTN_Name(RTN_FindByAddress(eip)).c_str());
+        
+        Logger::Write(
             "\tException code=0x%x address=0x%x tid=%d\n \
             \t\teax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x \
             eip=%08x esp=%08x ebp=%08x\n \
@@ -110,7 +115,7 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
             if(PIN_SafeCopy(&eip, (ADDRINT *)(ebp + 4), 4) != 4) 
                 break;      
 
-            Logger::Instance().Write("\t\t%08x %08x %08x\n", ebp, childebp, eip);
+            Logger::Write("\t\t ebp = 0x%x childebp = 0x%x eip = 0x%x\n", ebp, childebp, eip);
 
             if(PIN_SafeCopy(&ebp, (ADDRINT *)ebp, 4) != 4) 
                 break;
@@ -121,31 +126,61 @@ VOID ContextCallback(THREADID tid, CONTEXT_CHANGE_REASON reason, const CONTEXT *
     }
 }
 
-// Analysis routing for call invocation.
-void AddCallee(ADDRINT ins_addr, ADDRINT exec_target, ADDRINT regBased, THREADID tid)
+// Analysis routin for call invocation.
+void AddCallee(ADDRINT ins_addr, ADDRINT exec_target, ADDRINT regBased, THREADID tid, VOID* v)
 {
-    Thread* thread = MemoryTracer::Instance().getMemoryArea(ins_addr)->getThread(tid);
+    ProcessTrace* pTrace;
+    Thread* thread;
+    MemoryArea* ma;
 
-    if (thread) {
-        Call* cur_call = thread->getCall(exec_target);
-        if (cur_call) {
-            cur_call->addXref(ins_addr);
-        }
-        else {
-            thread->addCall(new Call(exec_target, ins_addr));
-        }
+    if (v == NULL) {
+        Logger::Write("[%s] pTrace is NULL!!!\n", __FUNCTION__);
+        return;
+    }
+
+    pTrace = (ProcessTrace*)v;
+    ma = pTrace->addMemoryArea(ins_addr);
+
+    if (ma == NULL) {
+        Logger::Write("[%s] Memory area is NULL!!!\n", __FUNCTION__);
+        return;
+    }
+
+    thread = ma->getThread(tid);
+    if (thread == NULL) {
+        Logger::Write("[%s] No record for the thread : %d\n", __FUNCTION__, tid);
+        return;
+    }
+
+    Call* cur_call = thread->getCall(exec_target);
+    if (cur_call) {
+        cur_call->addXref(ins_addr);
     }
     else {
-        Logger::Instance().Write("[%s] No record for the thread: %d\n", __FUNCTION__, tid);
+        thread->addCall(new Call(exec_target, ins_addr, pTrace->ResolveAddress(exec_target)));
     }
 }
 
-VOID PIN_FAST_ANALYSIS_CALL BasicBlockAnalyzer(ADDRINT bbl_start, ADDRINT bbl_size, ADDRINT inst_num, THREADID tid)
+VOID BasicBlockAnalyzer(ADDRINT bbl_start, ADDRINT bbl_size, ADDRINT inst_num, THREADID tid, VOID* v)
 {
     BasicBlock* bbl = NULL;
-    MemoryArea* ma = MemoryTracer::Instance().getMemoryArea(bbl_start);
-    Thread* thread = ma->getThread(tid);
+    ProcessTrace* pTrace;
+    MemoryArea* ma;
+    Thread* thread;
 
+    if (v == NULL) {
+        Logger::Write("[%s] pTrace is NULL!!!\n", __FUNCTION__);
+        return;
+    }
+    pTrace = (ProcessTrace*)v;
+
+    ma = pTrace->addMemoryArea(bbl_start);
+    if (ma == NULL) {
+        Logger::Write("[%s] Memory area is NULL!!!\n", __FUNCTION__);
+        return;
+    }
+
+    thread = ma->getThread(tid);
     if (thread == NULL) {
         thread = new Thread(bbl_start, tid);
         ma->addThread(thread);
@@ -164,190 +199,197 @@ VOID Trace(TRACE trace, VOID *v)
 {
     ADDRINT disp;
     UINT32 has_ret = 0;
-    MemoryArea* ma = NULL;
+    MemoryArea* ma;
     Image* img = NULL;
+    ProcessTrace* pTrace = (ProcessTrace*)v;
+    
+    if (v == NULL) {
+        Logger::Write("[%s] pTrace is NULL!!!\n", __FUNCTION__);
+        return;
+    }
 
-    // We need this check because of any custom loaded/decrypted (inmemory) libraries
-    // as PIN will not detect them and we still do not need known libraries to be traced.
-    if (ProcessTrace::Instance().isAddressInScope(TRACE_Address(trace))) {
-        ma = MemoryTracer::Instance().getMemoryArea(TRACE_Address(trace));
-        if (ma && (img = dynamic_cast<Image*>(ma))) {
-            ProcessTrace::Instance().addImage(img);
-        }
+    // For legit in memory modules or 64bit versions not visible to pin (wow64)
+    ma = pTrace->addMemoryArea(TRACE_Address(trace));
+    if (pTrace->isAddressInScope(TRACE_Address(trace))) {
+        Logger::Write("[%s] Tracing address : 0x%x\n", __FUNCTION__, TRACE_Address(trace));
 
-        if (ProcessTrace::Instance().isAddressInScope(TRACE_Address(trace)))
+        for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
         {
-            Logger::Instance().Write("[%s] Tracing address: 0x%x\n", __FUNCTION__, TRACE_Address(trace));
+            // as BBL has only one possible exit, we are interested in the last instruction
+            INS ins = BBL_InsTail(bbl);
 
-            for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))
+            BBL_InsertCall(bbl,
+                            IPOINT_BEFORE,
+                            (AFUNPTR)BasicBlockAnalyzer, 
+                            IARG_ADDRINT, BBL_Address(bbl),
+                            IARG_ADDRINT, BBL_Size(bbl),
+                            IARG_ADDRINT, BBL_NumIns(bbl),
+                            IARG_THREAD_ID,
+                            IARG_PTR, v,
+                            IARG_END);
+
+            if (INS_IsControlFlow(ins))
             {
-                // as BBL has only one possible exit, we are interested in the last instruction
-                INS ins = BBL_InsTail(bbl);
-
-                BBL_InsertCall(bbl,
-                               IPOINT_BEFORE,
-                               (AFUNPTR)BasicBlockAnalyzer,
-                               IARG_FAST_ANALYSIS_CALL, 
-                               IARG_ADDRINT, BBL_Address(bbl),
-                               IARG_ADDRINT, BBL_Size(bbl),
-                               IARG_ADDRINT, BBL_NumIns(bbl),
-                               IARG_THREAD_ID,
-                               IARG_END);
-
-                if (INS_IsBranchOrCall(ins))
+                if (INS_IsCall(ins))
                 {
-                    if (INS_IsCall(ins))
+                    if (INS_OperandIsReg(ins, 0))
                     {
-                        if (INS_OperandIsReg(ins, 0))
+                        REG base = INS_OperandMemoryBaseReg(ins, 0);
+                        if (base ==  REG_INVALID())
                         {
-                            REG base = INS_OperandMemoryBaseReg(ins, 0);
-                            if (base ==  REG_INVALID())
-                            {
-                                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
-                                                    IARG_INST_PTR, 
-                                                    IARG_REG_VALUE, INS_OperandReg(ins, 0), 
-                                                    IARG_ADDRINT, 1,
-                                                    IARG_THREAD_ID,
-                                                    IARG_END);
-                            }
+                            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
+                                                IARG_INST_PTR, 
+                                                IARG_REG_VALUE, INS_OperandReg(ins, 0), 
+                                                IARG_ADDRINT, 1,
+                                                IARG_THREAD_ID,
+                                                IARG_PTR, v,
+                                                IARG_END);
                         }
-                        else if (INS_OperandIsMemory(ins, 0))
-                        {
-                            disp = INS_MemoryDisplacement(ins);
-                            REG base = INS_OperandMemoryBaseReg(ins, 0);
-                            if (base ==  REG_INVALID())
-                            {
-                                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
-                                                    IARG_INST_PTR, 
-                                                    IARG_BRANCH_TARGET_ADDR,
-                                                    IARG_ADDRINT, 0, 
-                                                    IARG_THREAD_ID,
-                                                    IARG_END);
-                            }
-                            else
-                            {
-                                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
-                                                    IARG_INST_PTR, 
-                                                    IARG_BRANCH_TARGET_ADDR,
-                                                    IARG_ADDRINT, 1, 
-                                                    IARG_THREAD_ID,
-                                                    IARG_END);
-                            }
-                        }
-                        else if (INS_OperandIsBranchDisplacement(ins, 0))
+                    }
+                    else if (INS_OperandIsMemory(ins, 0))
+                    {
+                        disp = INS_MemoryDisplacement(ins);
+                        REG base = INS_OperandMemoryBaseReg(ins, 0);
+                        if (base ==  REG_INVALID())
                         {
                             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
                                                 IARG_INST_PTR, 
                                                 IARG_BRANCH_TARGET_ADDR,
                                                 IARG_ADDRINT, 0, 
                                                 IARG_THREAD_ID,
+                                                IARG_PTR, v,
+                                                IARG_END);
+                        }
+                        else
+                        {
+                            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
+                                                IARG_INST_PTR, 
+                                                IARG_BRANCH_TARGET_ADDR,
+                                                IARG_ADDRINT, 1, 
+                                                IARG_THREAD_ID,
+                                                IARG_PTR, v,
                                                 IARG_END);
                         }
                     }
-                    else if (INS_Opcode(ins) == XED_ICLASS_JMP)
+                    else if (INS_OperandIsBranchDisplacement(ins, 0))
                     {
-                        if (INS_OperandIsMemory(ins, 0) || INS_OperandIsReg(ins, 0))
+                        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
+                                            IARG_INST_PTR, 
+                                            IARG_BRANCH_TARGET_ADDR,
+                                            IARG_ADDRINT, 0, 
+                                            IARG_THREAD_ID,
+                                            IARG_PTR, v,
+                                            IARG_END);
+                    }
+                }
+                else if (INS_Opcode(ins) == XED_ICLASS_JMP)
+                {
+                    if (INS_OperandIsMemory(ins, 0) || INS_OperandIsReg(ins, 0))
+                    {
+                        INS_InsertCall(ins, IPOINT_BEFORE, 
+                                            (AFUNPTR)AddCallee, 
+                                            IARG_INST_PTR, 
+                                            IARG_BRANCH_TARGET_ADDR,
+                                            IARG_ADDRINT, 0,
+                                            IARG_THREAD_ID,
+                                            IARG_PTR, v,
+                                            IARG_END);
+                    }
+                    else if (INS_OperandIsReg(ins, 0))
+                    {
+                        REG base = INS_OperandMemoryBaseReg(ins, 0);
+                        if (base ==  REG_INVALID())
                         {
-                            INS_InsertCall(ins, IPOINT_BEFORE, 
-                                                (AFUNPTR)AddCallee, 
+                            INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
                                                 IARG_INST_PTR, 
-                                                IARG_BRANCH_TARGET_ADDR,
-                                                IARG_ADDRINT, 0,
+                                                IARG_REG_VALUE, INS_OperandReg(ins, 0), 
+                                                IARG_ADDRINT, 1,
                                                 IARG_THREAD_ID,
+                                                IARG_PTR, v,
                                                 IARG_END);
-                        }
-                        else if (INS_OperandIsReg(ins, 0))
-                        {
-                            REG base = INS_OperandMemoryBaseReg(ins, 0);
-                            if (base ==  REG_INVALID())
-                            {
-                                INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)AddCallee, 
-                                                    IARG_INST_PTR, 
-                                                    IARG_REG_VALUE, INS_OperandReg(ins, 0), 
-                                                    IARG_ADDRINT, 1,
-                                                    IARG_THREAD_ID,
-                                                    IARG_END);
-                            }
                         }
                     }
                 }
             }
-            if (ma) {
-                ProcessTrace::Instance().addMemoryArea(ma);
-                if (ma->StatusAt(TRACE_Address(trace), TRACE_Size(trace)) == MemoryAreaStatus::Different)
-                    ma->saveState(TRACE_Address(trace));
-            }
+        }
+        if (ma && ma->StatusAt(TRACE_Address(trace), TRACE_Size(trace)) == MemoryAreaStatus::Different) {
+            Logger::Write("Memory changed at 0x%x!\n", TRACE_Address(trace));
+            ma->saveState(TRACE_Address(trace));
         }
     }
 }
 
-void pre_api_callback(CONTEXT *ctx, ADDRINT ret_addr, ADDRINT trg_addr, ADDRINT tid)
+void api_callback(ADDRINT ins_addr, CONTEXT *ctx, ADDRINT ret_addr, ADDRINT trg_addr, ADDRINT tid, VOID* hook, VOID* v)
 {
-    PIN_LockClient();
-    if (ProcessTrace::Instance().isAddressInScope(ret_addr))
+    Logger::Write("[%s] - ins=0x%x, ret=0x%x\n", __FUNCTION__, ins_addr, ret_addr);
+    ProcessTrace* pTrace = (ProcessTrace*)v;
+
+    if (v && pTrace->isAddressInScope(ret_addr))
     {
         ADDRINT ebp = PIN_GetContextReg(ctx, REG_ESP);
-        Thread* thread = MemoryTracer::Instance().getMemoryArea(ret_addr)->getThread(tid);
+        MemoryArea* ma = pTrace->addMemoryArea(ret_addr);
+        if (ma == NULL) {
+            Logger::Write("[%s] Memory Area is NULL!!!\n", __FUNCTION__);
+            return;
+        }
+        Thread* thread = ma->getThread(tid);
+        if (thread == NULL) {
+            Logger::Write("[%s] Thread variable is NULL!!!\n", __FUNCTION__);
+            return;
+        }
         
         Call* api_call = thread->getCall(trg_addr);
         if (api_call) {
-            api_call->addAnalysis(new PreCallAnalysis(ebp, *api_call));
+            ApiHook* hook_ptr = (ApiHook*)hook;
+            if (hook_ptr && hook_ptr->pre_parser) {
+                api_call->Analyze(hook_ptr, (long*)(ebp + 4));
+            }
         }
     }
-    PIN_UnlockClient();
-}
-
-void post_api_callback(CONTEXT *ctx, ADDRINT ret_addr, ADDRINT trg_addr, ADDRINT tid)
-{
-    PIN_LockClient();
-    if (ProcessTrace::Instance().isAddressInScope(ret_addr))
-    {
-        ADDRINT ebp = PIN_GetContextReg(ctx, REG_ESP);
-        Thread* thread = MemoryTracer::Instance().getMemoryArea(ret_addr)->getThread(tid);
-
-        Call* api_call = thread->getCall(trg_addr);
-        if (api_call) {
-            api_call->addAnalysis(new PostCallAnalysis(ebp, *api_call));
-        }
-    }
-    PIN_UnlockClient();
 }
 
 // Analyze every image that is being loaded into the process.
 VOID ImageLoad(IMG img, VOID *v)
 {
-    Image* image = MemoryTracer::Instance().CreateImage(&img);
-    ProcessTrace::Instance().addImage(image);
-    
-    if (IMG_IsMainExecutable(img))
+    Logger::Write("\t\t%s\n", __FUNCTION__);
+
+    ProcessTrace* pTrace = (ProcessTrace*)v;
+    if (v == NULL) {
+        Logger::Write("[%s] pTrace is NULL!!!\n", __FUNCTION__);
         return;
+    }
+
+    pTrace->addImage_(&img);
 
     // On each loaded image, its routines will be hooked per supplied configuration
     for (SEC sec = IMG_SecHead(img); SEC_Valid(sec); sec = SEC_Next(sec)) {
         for (RTN rtn = SEC_RtnHead(sec); RTN_Valid(rtn); rtn = RTN_Next(rtn)) {
-            const ApiHook* hook = CFG::Instance().getHook(strrchr(IMG_Name(img).c_str(), '\\') + 1, RTN_Name(rtn).c_str());
+            const ApiHook* hook = pTrace->getConfig().getHook(strrchr(IMG_Name(img).c_str(), '\\') + 1, RTN_Name(rtn).c_str());
             if (hook) {
                 RTN_Open(rtn);
                 
                 if (hook->pre_parser) {
                     RTN_InsertCall(rtn, IPOINT_BEFORE, 
-                                    (AFUNPTR)pre_api_callback,
+                                    (AFUNPTR)api_callback,
+                                    IARG_INST_PTR,
                                     IARG_CONST_CONTEXT,
                                     IARG_RETURN_IP,
-                                    IARG_ADDRINT,
-                                    RTN_Address(rtn),
+                                    IARG_ADDRINT, RTN_Address(rtn),
                                     IARG_THREAD_ID,
+                                    IARG_PTR, hook,
+                                    IARG_PTR, v,
                                     IARG_END);
                 }
                         
                 if (hook->post_parser) {
                     RTN_InsertCall(rtn, IPOINT_AFTER, 
-                                    (AFUNPTR)post_api_callback,
+                                    (AFUNPTR)api_callback,
                                     IARG_CONST_CONTEXT,
                                     IARG_RETURN_IP,
-                                    IARG_ADDRINT,
-                                    RTN_Address(rtn),
+                                    IARG_ADDRINT, RTN_Address(rtn),
                                     IARG_THREAD_ID,
+                                    IARG_PTR, hook,
+                                    IARG_PTR, v,
                                     IARG_END);
                 }
                 
@@ -357,29 +399,28 @@ VOID ImageLoad(IMG img, VOID *v)
     }
 }
 
-void save_maze_log()
+void save_maze_log(VOID* v)
 {
-    Json::StyledWriter writer;
-    Json::Value root;
+    Logger::Write("[%s]\n", __FUNCTION__);
+    ProcessTrace* pTrace = (ProcessTrace*)v;
+    cJSON* root = cJSON_CreateObject();
     std::ofstream json_out;
 
-    ProcessTrace::Instance().Export(CFG::Instance().getOutputDir());
-    ProcessTrace::Instance().toJson(root);
+    pTrace->Export(pTrace->getConfig().getOutputDir());
+    pTrace->toJson(root);
 
-    if (!root.empty()) {
-        json_out.open(CFG::Instance().getTraceLogFilePath());
-        json_out << writer.write(root);
-        json_out.close();
-    }
+    json_out.open(pTrace->getConfig().getTraceLogFilePath());
+    json_out << cJSON_Print(root);
+    json_out.close();
 }
 
 // Internal thread for inforcing timeout execution delay.
 // It's needed to stop the execution if sample runs more 
 // then planned.
-VOID InternalTimerThread(void *args)
+/*VOID InternalTimerThread(void* args)
 {
     for (int i = 100; i < KnobDelay.Value(); i += 100) {
-        if (PIN_IsProcessExiting())
+        //if (PIN_IsProcessExiting())
             PIN_ExitThread(0);
 
         PIN_Sleep(100);
@@ -390,16 +431,17 @@ VOID InternalTimerThread(void *args)
     // analysis routine but I did not notice any strange 
     // behaviour when the api was called from here.
     PIN_Detach();
-}
+}*/
 
 VOID Fini(INT32 code, VOID *v)
 {
-    save_maze_log();
+    Logger::Write("%s\n", __FUNCTION__);
+    save_maze_log(v);
 }
 
 VOID OutOfMemoryCallback(size_t size, VOID* v) {
-    Logger::Instance().Write("[%s] Out of memory.\n", __FUNCTION__);
-    save_maze_log();
+    Logger::Write("Out of memory.\n");
+    save_maze_log(v);
 }
 
 int main(int argc, char *argv[])
@@ -407,17 +449,20 @@ int main(int argc, char *argv[])
     PIN_InitSymbols();
     if (PIN_Init(argc,argv))
         return Usage();
+    pTrace = new ProcessTrace(KnobConfigFile.Value().c_str());
 
-    if (ProcessTrace::Instance().Initialize(KnobConfigFile.Value().c_str())) {
+    if (pTrace->Initialize()) {
+
+        Logger::Write("Starting instrumentation\n");
 
         // Register ImageLoad to be called when an image is loaded
-        IMG_AddInstrumentFunction(ImageLoad, 0);
+        IMG_AddInstrumentFunction(ImageLoad, pTrace);
 
         // Register function to be called to instrument traces
-        TRACE_AddInstrumentFunction(Trace, 0);
+        TRACE_AddInstrumentFunction(Trace, pTrace);
 
         // Register function to be called when the application exits
-        PIN_AddFiniFunction(Fini, 0);
+        PIN_AddFiniFunction(Fini, pTrace);
 
         PIN_AddContextChangeFunction(ContextCallback, 0);
 
@@ -425,16 +470,17 @@ int main(int argc, char *argv[])
         PIN_AddInternalExceptionHandler(ExceptionHandler, 0);
 
         // Internal thread to terminate execution once delay timeout hit
-        PIN_SpawnInternalThread(InternalTimerThread, 0, 0, 0);
+        //PIN_SpawnInternalThread(InternalTimerThread, 0, 0, 0);
 
         // Monitor for out of memory issues
-        PIN_AddOutOfMemoryFunction(OutOfMemoryCallback, 0);
+        PIN_AddOutOfMemoryFunction(OutOfMemoryCallback, pTrace);
 
+        Logger::Write("Starting target program\n");
         // Start the program, never returns
         PIN_StartProgram();
     }
 
-    Logger::Instance().Write("[!!!] Please check configuration.\n");
+    LOG("[!!!] Please check configuration.\n");
 
     return 0;
 }

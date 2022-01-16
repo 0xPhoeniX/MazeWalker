@@ -25,7 +25,7 @@ namespace MazeWalker {
         Call* getCall(int target) const;
 
         // Store the class info into json dataset
-        virtual bool toJson( Json::Value& root ) const;
+        virtual bool toJson( void* root ) const;
     private:
         void* _calls;
         void* _call_lut;

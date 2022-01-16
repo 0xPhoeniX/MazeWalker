@@ -1,15 +1,20 @@
 #include "PEImage.h"
 #include "crypto.h"
+#include <string>
 #include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <sstream>
+#include "Logger.h"
 #include <Windows.h>
 
-//REGISTER_MATYPE(MazeWalker::PEImage);
+using std::string;
 
 namespace MazeWalker {
 
-    PEImage::PEImage(int entry, int base, size_t size, const char* path) : Image(entry, base, size) { 
-        _imphash = new char[33];
-        _exphash = new char[33];
+    PEImage::PEImage(int entry, const char* path) : Image(entry) { 
+        _imphash = (char*)malloc(33);
+        _exphash = (char*)malloc(33);
         _path = 0;
         _name = "";
         if (_imphash) {
@@ -19,24 +24,25 @@ namespace MazeWalker {
             memset(_exphash, 0, 33);
         }
         if (path) {
-            _path = new char[MAX_PATH];
-            memset(_path, 0, MAX_PATH);
+            _path = (char*)malloc(strlen(path) + 1);
+            memset(_path, 0, strlen(path) + 1);
             memcpy(_path, path, strlen(path));
             _name = strrchr(_path, '\\') + 1;
+            Logger::Write("[%s] %s\n", __FUNCTION__, _path);
         }
     }
 
     PEImage::~PEImage() {
         if (_imphash) {
-            delete[] _imphash; _imphash = 0;
+            free(_imphash); _imphash = 0;
         }
 
         if (_exphash) {
-            delete[] _exphash; _exphash = 0;
+            free(_exphash); _exphash = 0;
         }
 
         if (_path) {
-            delete[] _path; _path = 0;
+            free(_path); _path = 0;
         }
 
         _name = 0;
@@ -71,9 +77,10 @@ namespace MazeWalker {
         std::string pAPIName;
         std::string imphashdata;
         size_t size = 0;
+
         const char* data = getLatestState(size);
-    
-        if (data)
+
+        if (data && size && isValid(data, size))
         {
             doshdr = (PIMAGE_DOS_HEADER)data;
 
@@ -99,7 +106,7 @@ namespace MazeWalker {
             while (importDir->Name) {
                 if (strlen((PSTR)(importDir->Name + data))) {
                     dllname = std::string((PSTR)(importDir->Name + data));
-                    std::transform(dllname.begin(), dllname.end(), dllname.begin(), tolower);
+                    std::transform(dllname.begin(), dllname.end(), dllname.begin(), std::tolower);
                     dllname.erase(dllname.length() - 4, 4);
 
                     if(importDir->OriginalFirstThunk!=0) {
@@ -198,15 +205,16 @@ namespace MazeWalker {
         PIMAGE_NT_HEADERS nthdr;
         PIMAGE_NT_HEADERS32 nthdr32;
         PIMAGE_NT_HEADERS64 nthdr64;
-        PIMAGE_EXPORT_DIRECTORY exportDir = NULL; 
+        PIMAGE_EXPORT_DIRECTORY exportDir = NULL;
         PDWORD functions = NULL;
         PWORD ordinals = NULL;
         PDWORD name = NULL;
         std::string exphashdata;
         size_t size = 0;
+
         const char* data = getLatestState(size);
-    
-        if (data)
+
+        if (data && size && isValid(data, size))
         {
             doshdr = (PIMAGE_DOS_HEADER)data;
 
@@ -263,7 +271,7 @@ namespace MazeWalker {
         PIMAGE_NT_HEADERS nthdr;
         PIMAGE_NT_HEADERS32 nthdr32;
         PIMAGE_NT_HEADERS64 nthdr64;
-        PIMAGE_EXPORT_DIRECTORY exportDir; 
+        PIMAGE_EXPORT_DIRECTORY exportDir;
         DWORD i, image_size = 0;
         PDWORD functions = NULL;
         PWORD ordinals = NULL;
@@ -325,6 +333,7 @@ namespace MazeWalker {
         unsigned short numsecs;
         unsigned short i;
 
+        Logger::Write("%s\n", __FUNCTION__);
         if (data && size > 0) {
             doshdr = (PIMAGE_DOS_HEADER)data;
 
@@ -339,9 +348,9 @@ namespace MazeWalker {
                 nthdr32 = (PIMAGE_NT_HEADERS32)nthdr;
                 nthdr32->OptionalHeader.ImageBase = (DWORD)Base();
                 numsecs = nthdr32->FileHeader.NumberOfSections;
-                if (size < sizeof(IMAGE_NT_HEADERS32) - 
-                           sizeof(IMAGE_OPTIONAL_HEADER32) + 
-                           sizeof(IMAGE_DOS_HEADER) + 
+                if (size < sizeof(IMAGE_NT_HEADERS32) -
+                           sizeof(IMAGE_OPTIONAL_HEADER32) +
+                           sizeof(IMAGE_DOS_HEADER) +
                            nthdr32->FileHeader.SizeOfOptionalHeader + 
                            (numsecs * sizeof(IMAGE_SECTION_HEADER)))
                     return;
@@ -361,9 +370,9 @@ namespace MazeWalker {
                 nthdr64 = (PIMAGE_NT_HEADERS64)nthdr;
                 nthdr64->OptionalHeader.ImageBase = Base();
                 numsecs = nthdr64->FileHeader.NumberOfSections;
-                if (size < sizeof(IMAGE_NT_HEADERS64) - 
-                           sizeof(IMAGE_OPTIONAL_HEADER64) + 
-                           sizeof(IMAGE_DOS_HEADER) + 
+                if (size < sizeof(IMAGE_NT_HEADERS64) -
+                           sizeof(IMAGE_OPTIONAL_HEADER64) +
+                           sizeof(IMAGE_DOS_HEADER) +
                            nthdr64->FileHeader.SizeOfOptionalHeader + 
                            (numsecs * sizeof(IMAGE_SECTION_HEADER)))
                     return;

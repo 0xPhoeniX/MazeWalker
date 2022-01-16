@@ -1,6 +1,6 @@
 #pragma once
 #include "IReportObject.h"
-
+#include "cfg.h"
 
 namespace MazeWalker {
 
@@ -9,7 +9,7 @@ namespace MazeWalker {
         // Create call object instance
         // @param target Address of the target call invocation
         // @param xref Address of the reference to the call
-        Call(int target, int xref);
+        Call(int target, int xref, const char* symbol);
         ~Call();
 
         // Add reference to the call
@@ -21,7 +21,7 @@ namespace MazeWalker {
         // Example: the analysis can include the runtime
         // information of the call parameters. The results
         // will later be saved into the output trace file.
-        void addAnalysis(IReportObject* result);
+        void Analyze(ApiHook *hook, long* params);
 
         // Return the target address of the call.
         int getTarget() const { return _target; }
@@ -33,7 +33,7 @@ namespace MazeWalker {
         const char* Image() const { return _image; }
 
         // Store the class info into json dataset
-        virtual bool toJson( Json::Value& root ) const;
+        virtual bool toJson( void* root ) const;
 
     private:
         void* _xrefs;

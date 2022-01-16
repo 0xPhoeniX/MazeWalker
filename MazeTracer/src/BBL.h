@@ -18,7 +18,7 @@ namespace MazeWalker {
         
         int getID() const { return _id; }
         
-        bool toJson( Json::Value& root ) const;
+        bool toJson(void* root ) const;
 
         // Increment the number of times the block was executed.
         BasicBlock& operator++() { _execs++; return *this; }

@@ -1,4 +1,5 @@
 #include "BBL.h"
+#include "cJSON.h"
 
 
 namespace MazeWalker {
@@ -12,12 +13,14 @@ namespace MazeWalker {
         _execs = 1;
     }
 
-    bool BasicBlock::toJson( Json::Value& root ) const {
-        root["id"] = _id;
-        root["start"] = _start;
-        root["end"] = _end;
-        root["inst"] = _ins_num;
-        root["reps"] = _execs;
+    bool BasicBlock::toJson(void* root ) const {
+        if (root == NULL) return false;
+
+        cJSON_AddNumberToObject((cJSON*)root, "id", _id);
+        cJSON_AddNumberToObject((cJSON*)root, "start", _start);
+        cJSON_AddNumberToObject((cJSON*)root, "end", _end);
+        cJSON_AddNumberToObject((cJSON*)root, "inst", _ins_num);
+        cJSON_AddNumberToObject((cJSON*)root, "reps", _execs);
 
         return true;
     }

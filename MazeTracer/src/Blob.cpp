@@ -3,9 +3,7 @@
 
 namespace MazeWalker {
 
-    //REGISTER_DEFAULTMATYPE(Blob);
-
-    Blob::Blob(int entry, int base, size_t size) : MemoryArea(entry, base, size) {
+    Blob::Blob(int entry) : MemoryArea(entry) {
     }
 
     const char* Blob::getFileType() const {

@@ -8,7 +8,7 @@ namespace MazeWalker {
     // It is registered in MemoryTracer
     class Blob : public MemoryArea {
     public:
-        Blob(int entry, int base, size_t size);
+        Blob(int entry);
 
         static bool isValid(const char* data, size_t size);
 

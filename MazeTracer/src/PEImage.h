@@ -8,7 +8,7 @@ namespace MazeWalker {
     // It is registered in MemoryTracer.
     class PEImage : public Image {
     public:
-        PEImage(int entry, int base, size_t size, const char* path = NULL);
+        PEImage(int entry, const char* path = 0);
         virtual const char* Resolve(int address) const;
         virtual const char* Name() const;
         virtual const char* Path() const;

@@ -29,12 +29,8 @@ namespace MazeWalker {
     // Configuration storage class.
     class CFG {
     public:
+        CFG(const char* path);
         ~CFG() {}
-
-        static CFG& Instance();
-
-        // Parse and load configuration from the file.
-        bool Load(const char* path);
 
         // As PIN does not support dynamic loading of the libraries, 
         // this trick is used to load whatever lib is needed before the 
@@ -62,7 +58,6 @@ namespace MazeWalker {
         const ApiHook* getHook(const char* lib, const char* api) const;
 
     private:
-        CFG();
         CFG(const CFG &) { }
         CFG &operator=(const CFG &) { return *this; }
 
@@ -70,6 +65,7 @@ namespace MazeWalker {
         void* _hook_data;
         const char* log_file_path;
         const char* trace_log;
+        const char* out_dir_path;
         char* root_dir;
         char* scripts_dir;
     };
