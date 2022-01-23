@@ -1,6 +1,7 @@
 import ctypes
 import json
 
+
 def pre_analyzer(HINTERNET_hConnect,
                  LPCTSTR_lpszVerb,
                  LPCTSTR_lpszObjectName,
@@ -14,14 +15,11 @@ def pre_analyzer(HINTERNET_hConnect,
     lpszVerb = ctypes.c_char_p.from_address(LPCTSTR_lpszVerb)
     lpszObjectName = ctypes.c_char_p.from_address(LPCTSTR_lpszObjectName)
     lpszReferer = ctypes.c_char_p.from_address(LPCTSTR_lpszReferer)
-    res = []
-    if (lpszVerb and lpszVerb.value):
-        result = {'name': 'lpszVerb', 'data': lpszVerb.value}
-        res.append(result)
-    if (lpszObjectName and lpszObjectName.value):
-        result = {'name': 'lpszObjectName', 'data': lpszObjectName.value}
-        res.append(result)
-    if (lpszReferer and lpszReferer.value):
-        result = {'name': 'lpszReferer', 'data': lpszReferer.value}
-        res.append(result)
+    res = {}
+    if (lpszVerb):
+        res['lpszVerb'] = lpszVerb.value
+    if (lpszObjectName):
+        res['lpszObjectName'] = lpszObjectName.value
+    if (lpszReferer):
+        res['lpszReferer'] = lpszReferer.value
     return json.dumps(res)

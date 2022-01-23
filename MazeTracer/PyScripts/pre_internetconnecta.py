@@ -1,6 +1,7 @@
 import ctypes
 import json
 
+
 def pre_analyzer(HINTERNET_hConnect,
                  LPCTSTR_lpszServerName,
                  INTERNET_PORT_nServerPort,
@@ -15,17 +16,13 @@ def pre_analyzer(HINTERNET_hConnect,
     nServerPort = ctypes.c_long.from_address(INTERNET_PORT_nServerPort)
     lpszUsername = ctypes.c_char_p.from_address(LPCTSTR_lpszUsername)
     lpszPassword = ctypes.c_char_p.from_address(LPCTSTR_lpszPassword)
-    res = []
-    if (lpszServerName and lpszServerName.value):
-        result = {'name': 'lpszServerName', 'data': lpszServerName.value}
-        res.append(result)
-    if (nServerPort and nServerPort.value):
-        result = {'name': 'nServerPort', 'data': nServerPort.value}
-        res.append(result)
-    if (lpszUsername and lpszUsername.value):
-        result = {'name': 'lpszUsername', 'data': lpszUsername.value}
-        res.append(result)
-    if (lpszPassword and lpszPassword.value):
-        result = {'name': 'lpszPassword', 'data': lpszPassword.value}
-        res.append(result)
+    res = {}
+    if (lpszServerName):
+        res['lpszServerName'] = lpszServerName.value
+    if (nServerPort):
+        res['nServerPort'] = nServerPort.value
+    if (lpszUsername):
+        res['lpszUsername'] = lpszUsername.value
+    if (lpszPassword):
+        res['lpszPassword'] = lpszPassword.value
     return json.dumps(res)

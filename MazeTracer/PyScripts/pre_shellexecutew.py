@@ -1,6 +1,7 @@
 import ctypes
 import json
 
+
 def pre_analyzer(HWND_hwnd,
                  LPCWSTR_lpOperation,
                  LPCWSTR_lpFile,
@@ -10,8 +11,7 @@ def pre_analyzer(HWND_hwnd,
                  **kwargs):
 
     File = ctypes.c_wchar_p.from_address(LPCWSTR_lpFile)
-    res = []
-    if (File and File.value):
-        result = {'name': 'lpFile', 'data': File.value}
-        res.append(result)
+    res = {}
+    if (File):
+        res['lpFile'] = File.value
     return json.dumps(res)

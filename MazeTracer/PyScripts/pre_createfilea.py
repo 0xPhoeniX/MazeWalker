@@ -1,6 +1,7 @@
 import ctypes
 import json
 
+
 def pre_analyzer(LPCTSTR_lpFileName,
                  DWORD_dwDesiredAccess,
                  DWORD_dwShareMode,
@@ -10,9 +11,7 @@ def pre_analyzer(LPCTSTR_lpFileName,
                  HANDLE_hTemplateFile,
                  **kwargs):
     lpFileName = ctypes.c_char_p.from_address(LPCTSTR_lpFileName)
-    res = []
-    if (lpFileName and lpFileName.value):
-        result = {'name': 'lpFileName', 'data': lpFileName.value}
-        res.append(result)
-    
+    res = {}
+    if lpFileName:
+        res['lpFileName'] = lpFileName.value
     return json.dumps(res)

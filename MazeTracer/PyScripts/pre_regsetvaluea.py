@@ -14,6 +14,7 @@ REG_RESOURCE_LIST = 8
 REG_FULL_RESOURCE_DESCRIPTOR = 9
 REG_RESOURCE_REQUIREMENTS_LIST = 10
 
+
 def pre_analyzer(HKEY_hKey,
                  LPCTSTR_lpValueName,
                  DWORD_Reserved,
@@ -23,15 +24,12 @@ def pre_analyzer(HKEY_hKey,
                  **kwargs):
     lpValueName = ctypes.c_char_p.from_address(LPCTSTR_lpValueName)
     dwType = ctypes.c_int.from_address(DWORD_dwType)
-    res = []
-    if (lpValueName and lpValueName.value):
-        result = {'name': 'lpValueName', 'data': lpValueName.value}
-        res.append(result)
-
-    if dwType and dwType.value:
+    res = {}
+    if lpValueName:
+        res['lpValueName'] = lpValueName.value
+    if dwType:
         if dwType.value == REG_SZ:
             lpData = ctypes.c_char_p.from_address(BYTE_plpData)
-            result = {'name': 'lpData', 'data': lpData.value}
-            res.append(result)
+            res['lpData'] = lpData.value
 
     return json.dumps(res)

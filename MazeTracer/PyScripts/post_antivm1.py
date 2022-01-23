@@ -1,5 +1,4 @@
 import ctypes
-from ctypes import sizeof, c_void_p, c_char, c_long, c_char_p
 import json
 
 
@@ -8,10 +7,11 @@ def replace_string(buffer, string, paterns, new_strs):
     for i in range(len(paterns)):
         vm_index = lower_str.find(paterns[i])
         while (vm_index != -1):
-            buffer[vm_index:(vm_index+len(paterns[i]))] = new_strs[i]
+            buffer[vm_index:(vm_index + len(paterns[i]))] = new_strs[i]
             vm_index = lower_str.find(paterns[i], vm_index + len(paterns[i]))
-    
-#SetupDiGetDeviceRegistryPropertyA
+
+
+# SetupDiGetDeviceRegistryPropertyA
 def post_analyzer(HDEVINFO_DeviceInfoSet,
                   PSP_DEVINFO_DATA_DeviceInfoData,
                   pProperty,
@@ -22,19 +22,19 @@ def post_analyzer(HDEVINFO_DeviceInfoSet,
                   **kwargs):
 
     Property = ctypes.c_ulong.from_address(pProperty)
-    if (Property.value == 0xC):
+    if (Property and Property.value == 0xC):
         PropertyBufferSize = ctypes.c_ulong.from_address(pPropertyBufferSize)
-        if (PropertyBufferSize.value > 0):
-            res = []
+        if (PropertyBufferSize and PropertyBufferSize.value > 0):
+            res = {}
             pPropertyBuffer = ctypes.c_ulong.from_address(PBYTE_PropertyBuffer)
             PropertyBuffer = ctypes.cast(pPropertyBuffer.value, ctypes.c_char_p)
-            buffer = (c_char * PropertyBufferSize.value).from_address(pPropertyBuffer.value)
+            buffer = (ctypes.c_char * PropertyBufferSize.value).from_address(pPropertyBuffer.value)
 
-            res.append({'name': 'PropertyBufferSize', 'data': PropertyBufferSize.value})
-            res.append({'name': 'original_PropertyBuffer', 'data': PropertyBuffer.value})
-            
+            res['PropertyBufferSize'] = PropertyBufferSize.value
+            res['original_PropertyBuffer'] = PropertyBuffer.value
+
             replace_string(buffer, PropertyBuffer, ['vmware', 'virtual'], [b'NewTek', b'Digital'])
-            
-            res.append({'name': 'fixed_PropertyBuffer', 'data': PropertyBuffer.value})
-            
+
+            res['fixed_PropertyBuffer'] = PropertyBuffer.value
+
             return json.dumps(res)

@@ -2,6 +2,7 @@ import ctypes
 from ctypes import *
 import json
 
+
 class FLOATING_SAVE_AREA(Structure):
     _fields_ = [("ControlWord", c_ulong),             # 0x00
                 ("StatusWord", c_ulong),              # 0x04
@@ -13,6 +14,7 @@ class FLOATING_SAVE_AREA(Structure):
                 ("RegisterArea", c_ubyte * 80),       # 0x1C
                 ("Cr0NpxState", c_ulong)              # 0x6C
                 ]
+
 
 class CONTEXT(Structure):
     _fields_ = [("ContextFlags", c_ulong),
@@ -39,16 +41,13 @@ class CONTEXT(Structure):
                 ("EFlags", c_ulong),                  # 0xC0
                 ("Esp", c_ulong),                     # 0xC4
                 ("SegSs", c_ulong),                   # 0xC8
-                ("ExtendedRegisters", c_ubyte * 512)
-               ]
+                ("ExtendedRegisters", c_ubyte * 512)]
+
 
 def pre_analyzer(HANDLE_hThread, PCONTEXT_lpContext, **kwargs):
-    res = []
-    result = {}
+    res = {}
     lpContext = ctypes.c_ulong.from_address(PCONTEXT_lpContext)
-
-    if (lpContext and lpContext.value):
+    if (lpContext):
         Context = CONTEXT.from_address(lpContext.value)
-        result = {"name": "EAX", "data": ("0x%x" % Context.Eax)}
-        res.append(result)
+        res["EAX"] = ("0x%x" % Context.Eax)
     return json.dumps(res)

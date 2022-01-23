@@ -19,7 +19,6 @@ def pre_analyzer(DWORD_dwDesiredAccess,
                                            " -t " + kwargs["pin_dir"] + "/MazeTracer.dll -cfg " +
                                            kwargs["pin_dir"] + "/config.json -unique_logfile")
                 config.cache['monitored_processes'].append(pid.value)
-        res = []
-        result = {'name': 'dwProcessId', 'data': pid.value}
-        res.append(result)
+        res = {}
+        res['dwProcessId'] = pid.value
         return json.dumps(res)

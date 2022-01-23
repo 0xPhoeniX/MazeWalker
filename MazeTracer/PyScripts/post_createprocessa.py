@@ -1,15 +1,15 @@
 from ctypes import *
 from ctypes.wintypes import DWORD, HANDLE
 import json
-import os
 import config
 
+
 class PROCESS_INFORMATION(Structure):
-        _fields_ = [
-        ("hProcess", HANDLE),
-        ("hThread", HANDLE),
-        ("dwProcessId", DWORD),
-        ("dwThreadId", DWORD)]
+    _fields_ = [("hProcess", HANDLE),
+                ("hThread", HANDLE),
+                ("dwProcessId", DWORD),
+                ("dwThreadId", DWORD)]
+
 
 def post_analyzer(LPCTSTR_lpApplicationName,
                   LPTSTR_lpCommandLine,
@@ -24,11 +24,10 @@ def post_analyzer(LPCTSTR_lpApplicationName,
                   **kwargs):
 
     plpProcessInformation = c_int.from_address(LPPROCESS_INFORMATION_lpProcessInformation)
-    res = []
-    if (plpProcessInformation and plpProcessInformation.value):
+    res = {}
+    if plpProcessInformation:
         lpProcessInformation = PROCESS_INFORMATION.from_address(plpProcessInformation.value)
         if lpProcessInformation and lpProcessInformation.dwProcessId > 0:
-                config.cache['monitored_processes'].append(lpProcessInformation.dwProcessId)
-                result = {'name': 'dwProcessId', 'data': lpProcessInformation.dwProcessId}
-                res.append(result)
+            config.cache['monitored_processes'].append(lpProcessInformation.dwProcessId)
+            res['dwProcessId'] = lpProcessInformation.dwProcessId
     return json.dumps(res)

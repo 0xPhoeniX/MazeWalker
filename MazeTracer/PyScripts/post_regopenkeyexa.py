@@ -1,6 +1,7 @@
 import ctypes
 import json
 
+
 def post_analyzer(HKEY_hKey,
                   LPCTSTR_lpSubKey,
                   DWORD_ulOptions,
@@ -9,26 +10,22 @@ def post_analyzer(HKEY_hKey,
                   **kwargs):
     lpSubKey = ctypes.c_char_p.from_address(LPCTSTR_lpSubKey)
     hKey = ctypes.c_void_p.from_address(HKEY_hKey)
-    res = []
-    if (lpSubKey and lpSubKey.value):
-        result = {'name': 'lpSubKey', 'data': lpSubKey.value}
-        res.append(result)
+    res = {}
+    if (lpSubKey):
+        res['lpSubKey'] = lpSubKey.value
 
-    if hKey and hKey.value:
-        result = {}
-        result['name'] = 'hKey'
+    if hKey:
         if hKey.value == 0x80000000:
-            result['data'] = 'HKCR'
+            res['hKey'] = 'HKCR'
         elif hKey.value == 0x80000001:
-            result['data'] = 'HKCU'
+            res['hKey'] = 'HKCU'
         elif hKey.value == 0x80000002:
-            result['data'] = 'HKLM'
+            res['hKey'] = 'HKLM'
         elif hKey.value == 0x80000003:
-            result['data'] = 'HKU'
+            res['hKey'] = 'HKU'
         elif hKey.value == 0x80000005:
-            result['data'] = 'HKCC'
+            res['hKey'] = 'HKCC'
         else:
-            result['data'] = '0x%x' % hKey.value
-        res.append(result)
-    
+            res['hKey'] = '0x%x' % hKey.value
+
     return json.dumps(res)
